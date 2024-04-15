@@ -11,6 +11,7 @@ use crate::api::services::auth::AuthServiceImpl;
 use crate::api::services::task::TaskServiceImpl;
 use crate::api::services::team::TeamServiceImpl;
 use crate::auth::auth_server::AuthServer;
+use crate::core::regex::CachedRegexValidator;
 use crate::infrastructure::databases::postgresql::db_pool;
 use crate::infrastructure::databases::redis::redis_pool;
 use crate::infrastructure::repositories::role_repository::RoleRepositoryImpl;
@@ -31,6 +32,12 @@ pub struct Container {
 
 impl Container {
     pub fn new() -> Self {
+        let regex_cache = Arc::new({
+            let mut to_compile = CachedRegexValidator::default();
+            to_compile.compile_all();
+            to_compile
+        });
+        
         let pool = Arc::new(db_pool());
         let redis_pool = Arc::new(redis_pool().unwrap());
         let argon2 = Arc::new(Argon2::default());
@@ -45,7 +52,7 @@ impl Container {
         let task_repository = Arc::new(TaskRepositoryImpl::new(pool.clone()));
         let role_repository = Arc::new(RoleRepositoryImpl::new(pool.clone()));
         let redis_session_repository = Arc::new(RedisSessionRepositoryImpl::new(redis_pool));
-
+        
         let layer = tower::ServiceBuilder::new()
             .timeout(Duration::from_secs(30))
             .layer(AuthMiddlewareLayer::new(redis_session_repository.clone()))
@@ -54,7 +61,7 @@ impl Container {
             .into_inner();
 
         // let chat_service = ChatServiceServerImpl::new(map);
-        let auth_service = AuthServiceImpl::new(user_repository, redis_session_repository);
+        let auth_service = AuthServiceImpl::new(regex_cache, user_repository, redis_session_repository);
         let team_service = TeamServiceImpl::new(team_repository, role_repository.clone());
         let task_service = TaskServiceImpl::new(task_repository, role_repository);
 
