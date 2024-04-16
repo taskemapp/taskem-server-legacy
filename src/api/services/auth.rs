@@ -1,20 +1,23 @@
-use crate::auth::auth_server::Auth;
+use std::sync::Arc;
+
+use derive_new::new;
+use tonic::{Request, Response, Status};
+use tracing::log::error;
+
 use crate::auth::{
-    LoginRequest, LoginResponse, LogoutRequest, LogoutResponse, SignUpResponse, SignupRequest,
+    LoginRequest, LoginResponse, LogoutRequest, LogoutResponse, SignupRequest, SignUpResponse,
 };
+use crate::auth::auth_server::Auth;
+use crate::core::regex::CachedRegexValidator;
 use crate::domain::constants::EMAIL;
 use crate::domain::models::user::login_information::LoginInformation;
 use crate::domain::models::user::user_information::UserInformation;
 use crate::domain::repositories::session::RedisSessionRepository;
 use crate::domain::repositories::user::UserRepository;
-use crate::core::regex::match_regex;
-use derive_new::new;
-use std::sync::Arc;
-use tonic::{Request, Response, Status};
-use tracing::log::error;
 
 #[derive(new)]
 pub struct AuthServiceImpl {
+    pub(self) regex_cache: Arc<CachedRegexValidator>,
     pub(self) user_repository: Arc<dyn UserRepository>,
     pub(self) redis_repository: Arc<dyn RedisSessionRepository>,
 }
@@ -26,7 +29,8 @@ impl Auth for AuthServiceImpl {
         request: Request<SignupRequest>,
     ) -> Result<Response<SignUpResponse>, Status> {
         let sign_up_request = request.into_inner();
-        if match_regex(EMAIL, &sign_up_request.email).is_err() {
+
+        if self.regex_cache.check_email(&sign_up_request.email).is_err() {
             return Err(Status::invalid_argument("Invalid email"));
         }
 
@@ -48,7 +52,8 @@ impl Auth for AuthServiceImpl {
         request: Request<LoginRequest>,
     ) -> Result<Response<LoginResponse>, Status> {
         let login_request = request.into_inner();
-        if match_regex(EMAIL, &login_request.email).is_err() {
+
+        if self.regex_cache.check_email(&login_request.email).is_err() {
             return Err(Status::invalid_argument("Invalid email"));
         }
 
@@ -66,7 +71,7 @@ impl Auth for AuthServiceImpl {
             Err(e) => {
                 error!("{:?}", e);
                 Err(Status::not_found("User not found"))
-            },
+            }
         }
     }
 
