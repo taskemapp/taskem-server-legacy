@@ -24,7 +24,6 @@ use crate::team::team_server::TeamServer;
 
 pub struct Container {
     pub auth_server: AuthServer<AuthServiceImpl>,
-    // pub chat_server: ChatServiceServer<ChatServiceServerImpl>,
     pub team_server: TeamServer<TeamServiceImpl>,
     pub task_server: TaskServer<TaskServiceImpl>,
     pub layer: Stack<AuthMiddlewareLayer, Stack<TimeoutLayer, Identity>>,
@@ -56,23 +55,18 @@ impl Container {
         let layer = tower::ServiceBuilder::new()
             .timeout(Duration::from_secs(30))
             .layer(AuthMiddlewareLayer::new(redis_session_repository.clone()))
-            // .layer(GrpcWebLayer::new())
-            // .layer(CorsLayer::permissive())
             .into_inner();
 
-        // let chat_service = ChatServiceServerImpl::new(map);
         let auth_service = AuthServiceImpl::new(regex_cache, user_repository, redis_session_repository);
         let team_service = TeamServiceImpl::new(team_repository, role_repository.clone());
         let task_service = TaskServiceImpl::new(task_repository, role_repository);
 
-        // let chat_server = ChatServiceServer::new(chat_service);
         let auth_server = AuthServer::new(auth_service);
         let team_server = TeamServer::new(team_service);
         let task_server = TaskServer::new(task_service);
 
         Container {
             auth_server,
-            // chat_server,
             team_server,
             task_server,
             layer,

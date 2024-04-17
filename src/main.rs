@@ -50,17 +50,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .init();
     }
 
-    // let cert = tokio::fs::read("certs/server.pem")
-    //     .await
-    //     .expect("Failed to read cert");
-    // let key = tokio::fs::read("certs/server.key")
-    //     .await
-    //     .expect("Failed to read key");
-
-    // let identity = Identity::from_pem(cert, key);
-
-    // let tls = tonic::transport::ServerTlsConfig::new().identity(identity);
-
     let addr = "0.0.0.0:50051".parse()?;
 
     let container = Container::default();
@@ -68,8 +57,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     tracing::info!(message = "Starting server 🙂", %addr);
 
     Server::builder()
-        // .tls_config(tls)
-        // .expect("Failed to add tls config")
         .trace_fn(|_| tracing::debug_span!("taskem"))
         .layer(container.layer)
         .http2_keepalive_interval(Some(Duration::from_secs(3)))
