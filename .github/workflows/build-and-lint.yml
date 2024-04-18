@@ -8,6 +8,9 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
+      - name: setup proto
+        uses: moonrepo/setup-proto@v1
+      - run: proto use
       - name: build
         uses: actions-rs/cargo@v1
         with:
