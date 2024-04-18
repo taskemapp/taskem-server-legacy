@@ -1,0 +1,21 @@
+name: Metrics report
+
+on: [pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    permissions:
+      issues: write
+      pull-requests: write
+      repository-projects: read
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: autometrics-dev/diff-metrics@v1
+        with:
+          gh-token: ${{ secrets.GITHUB_TOKEN }}
+          rust-roots: |
+            .
