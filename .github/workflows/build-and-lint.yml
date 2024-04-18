@@ -1,5 +1,7 @@
 on: [push]
 name: Build and lint
+permissions:
+  checks: write
 jobs:
   build:
     runs-on: ubuntu-latest
