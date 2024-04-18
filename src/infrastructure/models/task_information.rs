@@ -1,11 +1,11 @@
 use crate::domain::models::task::task_information::TaskInformation;
+use crate::domain::models::task::task_status::TaskStatus;
+use crate::infrastructure::models::task_status::TaskStatusDiesel;
 use crate::infrastructure::models::team_information::TeamInformationDiesel;
+use crate::infrastructure::models::user_information::UserInformationDiesel;
 use crate::infrastructure::schema::task_information;
 use diesel::{Associations, Identifiable, Insertable, Queryable, Selectable};
 use uuid::Uuid;
-use crate::domain::models::task::task_status::TaskStatus;
-use crate::infrastructure::models::task_status::TaskStatusDiesel;
-use crate::infrastructure::models::user_information::UserInformationDiesel;
 
 #[derive(Insertable, Queryable, Identifiable, Associations, Selectable, PartialEq, Eq)]
 #[diesel(table_name = task_information)]

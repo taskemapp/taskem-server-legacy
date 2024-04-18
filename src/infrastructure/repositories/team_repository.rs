@@ -1,4 +1,3 @@
-
 use crate::domain::error::RepositoryError;
 use crate::domain::models::team::team_information::TeamInformation;
 use crate::domain::models::team::team_leave::TeamLeave;
@@ -18,7 +17,7 @@ use diesel::{
     delete, insert_into, BelongingToDsl, ExpressionMethods, QueryDsl, RunQueryDsl, SelectableHelper,
 };
 use std::sync::Arc;
-use tracing::{error};
+use tracing::error;
 use uuid::Uuid;
 
 #[derive(Clone, new)]
@@ -80,8 +79,8 @@ impl TeamRepository for TeamRepositoryImpl {
     }
 
     fn get_all_can_join(&self, id_user: &Uuid) -> RepositoryResult<Vec<TeamInformation>> {
-        use crate::infrastructure::schema::team_information::dsl::id;
         use crate::infrastructure::schema::team_information::dsl::creator;
+        use crate::infrastructure::schema::team_information::dsl::id;
         use crate::infrastructure::schema::team_information::dsl::team_information;
         use crate::infrastructure::schema::team_member::dsl::team_member;
         use crate::infrastructure::schema::team_member::dsl::user_id;
@@ -98,7 +97,6 @@ impl TeamRepository for TeamRepositoryImpl {
             .select(TeamMemberDiesel::as_select())
             .filter(user_id.ne(id_user))
             .load(&mut conn);
-
 
         let teams_can_join: Vec<uuid::Uuid> = match teams_can_join_query {
             Ok(value) => value.iter().map(|team| team.team_id).collect(),

@@ -1,6 +1,6 @@
+use crate::domain::models::task::task_status::TaskStatus;
 use crate::domain::models::user::user_information::UserInformation;
 use uuid::Uuid;
-use crate::domain::models::task::task_status::TaskStatus;
 
 #[derive(Clone, PartialEq, Eq)]
 pub struct TaskInformation {

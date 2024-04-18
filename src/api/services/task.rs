@@ -1,16 +1,20 @@
 use crate::domain::constants::MIDDLEWARE_AUTH_SESSION_KEY;
 use crate::domain::models::task::task_assign::TaskAssign;
 use crate::domain::models::task::task_information::TaskInformation;
+use crate::domain::repositories::role::RoleRepository;
 use crate::domain::repositories::task::TaskRepository;
-use crate::task::{AssignTaskRequest, CreateTaskRequest, GetAllResponse, GetTaskRequest, GetTeamTasksRequest, TaskResponse};
+use crate::task::task_server::Task;
+use crate::task::{
+    AssignTaskRequest, CreateTaskRequest, GetAllResponse, GetTaskRequest, GetTeamTasksRequest,
+    TaskResponse,
+};
+use autometrics::autometrics;
 use derive_new::new;
 use std::str::FromStr;
 use std::sync::Arc;
 use tonic::{async_trait, Request, Response, Status};
-use tracing::{error};
-use uuid::{Uuid};
-use crate::domain::repositories::role::RoleRepository;
-use crate::task::task_server::Task;
+use tracing::error;
+use uuid::Uuid;
 
 #[derive(new)]
 pub struct TaskServiceImpl {
@@ -19,6 +23,7 @@ pub struct TaskServiceImpl {
 }
 
 #[async_trait]
+#[autometrics]
 impl Task for TaskServiceImpl {
     async fn create(&self, request: Request<CreateTaskRequest>) -> Result<Response<()>, Status> {
         let task_repository = self.task_repository.clone();
@@ -55,9 +60,7 @@ impl Task for TaskServiceImpl {
         match role_repository.get_by_team_and_user_id(&team_id, &user_id) {
             Ok(value) => {
                 if !value.can_create_roles {
-                    return Err(
-                        Status::permission_denied("Can't create task"),
-                    );
+                    return Err(Status::permission_denied("Can't create task"));
                 }
             }
             Err(e) => {
@@ -94,7 +97,10 @@ impl Task for TaskServiceImpl {
         }
     }
 
-    async fn get_all_for_team(&self, request: Request<GetTeamTasksRequest>) -> Result<Response<GetAllResponse>, Status> {
+    async fn get_all_for_team(
+        &self,
+        request: Request<GetTeamTasksRequest>,
+    ) -> Result<Response<GetAllResponse>, Status> {
         let get_team_tasks_request = request.into_inner();
         let task_repository = self.task_repository.clone();
 
@@ -116,7 +122,10 @@ impl Task for TaskServiceImpl {
         }
     }
 
-    async fn get_all_for_user(&self, request: Request<()>) -> Result<Response<GetAllResponse>, Status> {
+    async fn get_all_for_user(
+        &self,
+        request: Request<()>,
+    ) -> Result<Response<GetAllResponse>, Status> {
         let task_repository = self.task_repository.clone();
 
         let metadata = request.metadata().clone();
@@ -176,6 +185,7 @@ impl Task for TaskServiceImpl {
         }
     }
 
+    #[autometrics]
     async fn assign(
         &self,
         request: Request<AssignTaskRequest>,
@@ -229,22 +239,21 @@ impl Task for TaskServiceImpl {
             }
         };
 
-        let creator_priority = match role_repository.get_by_team_and_user_id(&team_id, &creator_user_id) {
-            Ok(value) => {
-                if !value.can_assign_task {
-                    return Err(
-                        Status::permission_denied("Can't assign task"),
-                    );
+        let creator_priority =
+            match role_repository.get_by_team_and_user_id(&team_id, &creator_user_id) {
+                Ok(value) => {
+                    if !value.can_assign_task {
+                        return Err(Status::permission_denied("Can't assign task"));
+                    }
+                    value.priority
                 }
-                value.priority
-            }
-            Err(e) => {
-                return Err(Status::internal(format!(
-                    "Internal Server Error: {}",
-                    e.message
-                )));
-            }
-        };
+                Err(e) => {
+                    return Err(Status::internal(format!(
+                        "Internal Server Error: {}",
+                        e.message
+                    )));
+                }
+            };
 
         let assigned_priority = match role_repository.get_by_team_and_user_id(&team_id, &user_id) {
             Ok(value) => value.priority,
@@ -255,13 +264,11 @@ impl Task for TaskServiceImpl {
                 )));
             }
         };
-        
+
         if assigned_priority < creator_priority {
-            return Err(
-                Status::permission_denied("Can't assign task"),
-            );
+            return Err(Status::permission_denied("Can't assign task"));
         }
-        
+
         let task_assign = TaskAssign {
             id: Uuid::now_v7(),
             task_id,

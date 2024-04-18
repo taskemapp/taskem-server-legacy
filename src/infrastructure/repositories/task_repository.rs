@@ -1,23 +1,25 @@
 use crate::domain::error::RepositoryError;
 use crate::domain::models::task::task_assign::TaskAssign;
 use crate::domain::models::task::task_information::TaskInformation;
+use crate::domain::models::task::task_status::TaskStatus;
 use crate::domain::models::user::user_information::UserInformation;
 use crate::domain::repositories::repository::RepositoryResult;
 use crate::domain::repositories::task::TaskRepository;
 use crate::infrastructure::databases::postgresql::DBConn;
 use crate::infrastructure::models::task_assign::TaskAssignDiesel;
 use crate::infrastructure::models::task_information::TaskInformationDiesel;
+use crate::infrastructure::models::task_status::TaskStatusDiesel;
 use crate::infrastructure::models::user_information::UserInformationDiesel;
 use crate::infrastructure::repositories::get_pool::GetPool;
 use crate::infrastructure::repositories::map_from::MapFrom;
 use crate::infrastructure::schema::user_information;
 use derive_new::new;
-use diesel::{insert_into, BelongingToDsl, ExpressionMethods, QueryDsl, RunQueryDsl, SelectableHelper, update};
+use diesel::{
+    insert_into, update, BelongingToDsl, ExpressionMethods, QueryDsl, RunQueryDsl, SelectableHelper,
+};
 use std::sync::Arc;
 use tracing::error;
 use uuid::Uuid;
-use crate::domain::models::task::task_status::TaskStatus;
-use crate::infrastructure::models::task_status::TaskStatusDiesel;
 
 #[derive(Clone, new)]
 pub struct TaskRepositoryImpl {
@@ -118,9 +120,9 @@ impl TaskRepository for TaskRepositoryImpl {
     }
 
     fn get_all_for_team(&self, id_team: &Uuid) -> RepositoryResult<Vec<TaskInformation>> {
+        use crate::infrastructure::schema::task_information::dsl::task_information;
         use crate::infrastructure::schema::task_information::dsl::team_id;
         use crate::infrastructure::schema::task_information::end_timestamp;
-        use crate::infrastructure::schema::task_information::dsl::task_information;
         let mut conn = match Self::get_pool(&self.pool) {
             Ok(value) => value,
             Err(e) => {
@@ -167,11 +169,11 @@ impl TaskRepository for TaskRepositoryImpl {
     }
 
     fn get_all_for_user(&self, id_user: &Uuid) -> RepositoryResult<Vec<TaskInformation>> {
-        use crate::infrastructure::schema::task_information::dsl::id;
-        use crate::infrastructure::schema::task_information::end_timestamp;
-        use crate::infrastructure::schema::task_information::dsl::task_information;
         use crate::infrastructure::schema::task_assign::dsl::task_assign;
         use crate::infrastructure::schema::task_assign::dsl::user_id;
+        use crate::infrastructure::schema::task_information::dsl::id;
+        use crate::infrastructure::schema::task_information::dsl::task_information;
+        use crate::infrastructure::schema::task_information::end_timestamp;
         let mut conn = match Self::get_pool(&self.pool) {
             Ok(value) => value,
             Err(e) => {
@@ -260,9 +262,9 @@ impl TaskRepository for TaskRepositoryImpl {
 
     fn assign(&self, new_task_assign: &TaskAssign) -> RepositoryResult<TaskAssign> {
         use crate::infrastructure::schema::task_assign::dsl::task_assign;
-        use crate::infrastructure::schema::task_information::dsl::task_information;
         use crate::infrastructure::schema::task_information::dsl::id;
         use crate::infrastructure::schema::task_information::dsl::status;
+        use crate::infrastructure::schema::task_information::dsl::task_information;
 
         let assign_task = TaskAssignDiesel::from(new_task_assign.clone());
         let mut conn = match Self::get_pool(&self.pool) {
@@ -283,7 +285,7 @@ impl TaskRepository for TaskRepositoryImpl {
                     .filter(id.eq(assigned.task_id))
                     .set(status.eq(TaskStatusDiesel::from(TaskStatus::InProgress)))
                     .execute(&mut conn);
-                
+
                 match update_status_result {
                     Ok(_) => Ok(TaskAssign::from(assigned)),
                     Err(e) => {

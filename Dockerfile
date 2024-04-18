@@ -41,6 +41,6 @@ COPY --from=build /app/scripts/ /scripts
 
 COPY --from=build /app/.env /.env
 COPY --from=build /app/migrations /migrations
-COPY --from=build /app/target/release/grpc-test /grpc-test
+COPY --from=build /app/target/release/taskem /taskem
 
-CMD ["/grpc-test"]
+CMD ["/taskem"]
