@@ -80,6 +80,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let tcp_listen = tokio::net::TcpListener::bind(&addr).await.unwrap();
     axum::serve(tcp_listen, app.into_make_service())
-  
+        .await
+        .unwrap();
+
     Ok(())
 }
