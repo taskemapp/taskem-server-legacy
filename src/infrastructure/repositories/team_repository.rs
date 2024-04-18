@@ -183,7 +183,6 @@ impl TeamRepository for TeamRepositoryImpl {
             .filter(id.eq_any(teams_membership))
             .select(TeamInformationDiesel::as_select())
             .limit(1000)
-            // .order_by(name)
             .load(&mut conn);
 
         match result {

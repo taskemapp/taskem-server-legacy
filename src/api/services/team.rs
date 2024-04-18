@@ -518,7 +518,6 @@ impl Team for TeamServiceImpl {
         let _leave_request = request.into_inner();
         let _team_repository = self.team_repository.clone();
 
-        // let new_member = &TeamLeave;
         todo!()
     }
 }

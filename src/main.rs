@@ -47,17 +47,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .init();
     }
 
-    // let cert = tokio::fs::read("certs/server.pem")
-    //     .await
-    //     .expect("Failed to read cert");
-    // let key = tokio::fs::read("certs/server.key")
-    //     .await
-    //     .expect("Failed to read key");
-
-    // let identity = Identity::from_pem(cert, key);
-
-    // let tls = tonic::transport::ServerTlsConfig::new().identity(identity);
-
     let addr = "0.0.0.0:50051".parse()?;
 
     let container = Container::default();
@@ -91,8 +80,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let tcp_listen = tokio::net::TcpListener::bind(&addr).await.unwrap();
     axum::serve(tcp_listen, app.into_make_service())
-        .await
-        .unwrap();
-
+  
     Ok(())
 }
