@@ -1,13 +1,12 @@
-use std::error::Error;
-use std::fmt::{Debug, Display, Formatter};
-use std::io::Write;
-use diesel::{AsExpression, FromSqlRow};
+use crate::domain::models::task::task_status::TaskStatus;
+use crate::infrastructure::schema::sql_types::TaskStatus as TaskStatusScheme;
 use diesel::deserialize::FromSql;
 use diesel::pg::{Pg, PgValue};
 use diesel::serialize::{IsNull, Output, ToSql};
-use crate::domain::models::task::task_status::TaskStatus;
-use crate::infrastructure::schema::sql_types::TaskStatus as TaskStatusScheme;
-
+use diesel::{AsExpression, FromSqlRow};
+use std::error::Error;
+use std::fmt::{Debug, Display, Formatter};
+use std::io::Write;
 
 #[derive(Clone, Debug, FromSqlRow, AsExpression, PartialEq, Eq)]
 #[diesel(sql_type = TaskStatusScheme)]
@@ -62,7 +61,7 @@ impl ToSql<TaskStatusScheme, Pg> for TaskStatusDiesel {
             TaskStatusDiesel::InProgress => out.write_all(b"in progress")?,
             TaskStatusDiesel::Paused => out.write_all(b"paused")?,
             TaskStatusDiesel::Finished => out.write_all(b"finished")?,
-            TaskStatusDiesel::Canceled => out.write_all(b"canceled")?
+            TaskStatusDiesel::Canceled => out.write_all(b"canceled")?,
         }
         Ok(IsNull::No)
     }
@@ -77,7 +76,7 @@ impl FromSql<TaskStatusScheme, Pg> for TaskStatusDiesel {
             "paused" => Ok(TaskStatusDiesel::Paused),
             "finished" => Ok(TaskStatusDiesel::Finished),
             "canceled" => Ok(TaskStatusDiesel::Canceled),
-            _ => Err(Box::new(ParseEnumError {}))
+            _ => Err(Box::new(ParseEnumError {})),
         }
     }
 }

@@ -14,11 +14,10 @@ Cargo.lock
 *.pdb
 
 
+.autometrics
 .idea
 .vscode
 .env
 compose.yaml
 certs
 .DS_Store
-
-

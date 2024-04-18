@@ -10,6 +10,7 @@ use crate::team::{
     GetTeamRolesRequest, GetTeamRolesResponse, JoinTeamRequest, JoinTeamResponse, LeaveTeamRequest,
     LeaveTeamResponse, Role, RolePermission, TeamResponse, UserInfo,
 };
+use autometrics::autometrics;
 use derive_new::new;
 use std::str::FromStr;
 use std::sync::Arc;
@@ -24,6 +25,7 @@ pub struct TeamServiceImpl {
 }
 
 #[async_trait]
+#[autometrics]
 impl Team for TeamServiceImpl {
     async fn get(
         &self,
@@ -72,7 +74,10 @@ impl Team for TeamServiceImpl {
         }
     }
 
-    async fn get_user_teams(&self, request: Request<()>) -> Result<Response<GetAllTeamsResponse>, Status> {
+    async fn get_user_teams(
+        &self,
+        request: Request<()>,
+    ) -> Result<Response<GetAllTeamsResponse>, Status> {
         let team_repository = self.team_repository.clone();
         let role_repository = self.role_repository.clone();
 
@@ -133,7 +138,10 @@ impl Team for TeamServiceImpl {
         }
     }
 
-    async fn get_all_can_join(&self, request: Request<()>) -> Result<Response<GetAllTeamsResponse>, Status> {
+    async fn get_all_can_join(
+        &self,
+        request: Request<()>,
+    ) -> Result<Response<GetAllTeamsResponse>, Status> {
         let team_repository = self.team_repository.clone();
         let role_repository = self.role_repository.clone();
 

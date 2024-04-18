@@ -1,7 +1,7 @@
-use std::sync::Arc;
-use std::time::Duration;
 use argon2::Argon2;
 use diesel_migrations::{FileBasedMigrations, MigrationHarness};
+use std::sync::Arc;
+use std::time::Duration;
 
 use tower::layer::util::{Identity, Stack};
 use tower::timeout::TimeoutLayer;
@@ -36,28 +36,34 @@ impl Container {
             to_compile.compile_all();
             to_compile
         });
-        
+
         let pool = Arc::new(db_pool());
         let redis_pool = Arc::new(redis_pool().unwrap());
         let argon2 = Arc::new(Argon2::default());
 
         let migrations_dir = "migrations";
-        let migrations = FileBasedMigrations::from_path(migrations_dir).expect("Can't get migrations");
+        let migrations =
+            FileBasedMigrations::from_path(migrations_dir).expect("Can't get migrations");
 
-        db_pool().get().expect("Can't get a connection from pool").run_pending_migrations(migrations).unwrap();
+        db_pool()
+            .get()
+            .expect("Can't get a connection from pool")
+            .run_pending_migrations(migrations)
+            .unwrap();
 
         let user_repository = Arc::new(UserRepositoryImpl::new(pool.clone(), argon2.clone()));
         let team_repository = Arc::new(TeamRepositoryImpl::new(pool.clone()));
         let task_repository = Arc::new(TaskRepositoryImpl::new(pool.clone()));
         let role_repository = Arc::new(RoleRepositoryImpl::new(pool.clone()));
         let redis_session_repository = Arc::new(RedisSessionRepositoryImpl::new(redis_pool));
-        
+
         let layer = tower::ServiceBuilder::new()
             .timeout(Duration::from_secs(30))
             .layer(AuthMiddlewareLayer::new(redis_session_repository.clone()))
             .into_inner();
 
         let auth_service = AuthServiceImpl::new(regex_cache, user_repository, redis_session_repository);
+
         let team_service = TeamServiceImpl::new(team_repository, role_repository.clone());
         let task_service = TaskServiceImpl::new(task_repository, role_repository);
 

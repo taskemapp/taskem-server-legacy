@@ -1,15 +1,15 @@
+use autometrics::autometrics;
 use std::sync::Arc;
 
 use derive_new::new;
 use tonic::{Request, Response, Status};
 use tracing::log::error;
 
-use crate::auth::{
-    LoginRequest, LoginResponse, LogoutRequest, LogoutResponse, SignupRequest, SignUpResponse,
-};
 use crate::auth::auth_server::Auth;
+use crate::auth::{
+    LoginRequest, LoginResponse, LogoutRequest, LogoutResponse, SignUpResponse, SignupRequest,
+};
 use crate::core::regex::CachedRegexValidator;
-use crate::domain::constants::EMAIL;
 use crate::domain::models::user::login_information::LoginInformation;
 use crate::domain::models::user::user_information::UserInformation;
 use crate::domain::repositories::session::RedisSessionRepository;
@@ -22,6 +22,7 @@ pub struct AuthServiceImpl {
     pub(self) redis_repository: Arc<dyn RedisSessionRepository>,
 }
 
+#[autometrics]
 #[tonic::async_trait]
 impl Auth for AuthServiceImpl {
     async fn sign_up(
@@ -30,7 +31,11 @@ impl Auth for AuthServiceImpl {
     ) -> Result<Response<SignUpResponse>, Status> {
         let sign_up_request = request.into_inner();
 
-        if self.regex_cache.check_email(&sign_up_request.email).is_err() {
+        if self
+            .regex_cache
+            .check_email(&sign_up_request.email)
+            .is_err()
+        {
             return Err(Status::invalid_argument("Invalid email"));
         }
 

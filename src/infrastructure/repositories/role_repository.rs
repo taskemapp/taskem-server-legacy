@@ -194,7 +194,7 @@ impl RoleRepository for RoleRepositoryImpl {
                 return Err(RepositoryError { message: e.message });
             }
         };
-        
+
         let role_query = team_role
             .select(TeamRoleDiesel::as_select())
             .filter(id.eq(role_id))
