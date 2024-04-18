@@ -21,7 +21,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
   fmt:
-    name: Rustfmt
+    name: fmt
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
