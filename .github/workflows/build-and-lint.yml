@@ -9,8 +9,7 @@ jobs:
         with:
           toolchain: stable
       - name: setup proto
-        uses: moonrepo/setup-proto@v1
-      - run: proto use
+        uses: arduino/setup-protoc@v3
       - name: build
         uses: actions-rs/cargo@v1
         with:
