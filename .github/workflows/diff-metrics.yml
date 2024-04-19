@@ -18,4 +18,4 @@ jobs:
         with:
           gh-token: ${{ secrets.GITHUB_TOKEN }}
           rust-roots: |
-            .
+            auth
