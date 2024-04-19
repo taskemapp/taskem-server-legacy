@@ -1,5 +1,5 @@
-use crate::domain::constants::MIDDLEWARE_AUTH_SESSION_KEY;
-use crate::domain::repositories::session::RedisSessionRepository;
+use crate::constants::MIDDLEWARE_AUTH_SESSION_KEY;
+use crate::domain::repositories::session::SessionRepository;
 use derive_new::new;
 use hyper::StatusCode;
 use std::pin::Pin;
@@ -14,7 +14,7 @@ use tracing::{debug, info};
 
 #[derive(Clone, new)]
 pub struct AuthMiddlewareLayer {
-    redis_repository: Arc<dyn RedisSessionRepository>,
+    redis_repository: Arc<dyn SessionRepository>,
 }
 
 impl<S> Layer<S> for AuthMiddlewareLayer {
@@ -31,7 +31,7 @@ impl<S> Layer<S> for AuthMiddlewareLayer {
 #[derive(Debug, Clone)]
 pub struct AuthMiddleware<S> {
     inner: S,
-    redis_repository: Arc<dyn RedisSessionRepository>,
+    redis_repository: Arc<dyn SessionRepository>,
 }
 
 type BoxFuture<'a, T> = Pin<Box<dyn std::future::Future<Output = T> + Send + 'a>>;

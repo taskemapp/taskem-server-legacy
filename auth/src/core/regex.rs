@@ -1,6 +1,5 @@
+use crate::constants::EMAIL;
 use regex::{Error, Regex};
-
-use crate::domain::constants::EMAIL;
 
 #[derive(Default)]
 pub struct CachedRegexValidator {

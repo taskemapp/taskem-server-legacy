@@ -1,45 +1,42 @@
-[package]
-name = "taskem"
-version = "0.1.0"
-edition = "2021"
+[workspace]
+resolver = "2"
+members = [
+    "auth",
+    "libs/db",
+    "task",
+    "team",
+]
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-[dependencies]
-argon2 = "0.6.0-pre.0"
-autometrics = { version = "*", features = ["prometheus-exporter"], default-features = false }
-axum = "0.7.5"
-axum-server = "0.6.0"
-aws-lc-rs = { version = "1.6.2", features = ["bindgen"] }
-tonic = { version = "0.11.0", features = ["tls", "default"] }
-tonic-web = "0.11.0"
-tonic-reflection = "0.11.0"
-tower = { version = "0.4", features = ["default"] }
-tower-http = { version = "0.5.2", features = ["cors"] }
-tower-service = "0.3"
-prost = "0.12.3"
-uuid = { version = "1.7.0", features = ["v7", "serde"] }
-chrono = "0.4.33"
-prost-types = "0.12.3"
-tokio = { version = "1.35.1", features = ["full"] }
-serde = { version = "1.0.196", features = ["derive"] }
-dotenv = "0.15.0"
-regex = "1.10.3"
-async-stream = "0.3.5"
-derive-new = "0.6.0"
-tokio-stream = "0.1.14"
-rustls = "0.23.0"
-rustls-pemfile = "2.0.0"
-diesel = { version = "2.0.0", features = [
-    "postgres",
-    "r2d2",
-    "chrono",
-    "uuid",
-] }
-diesel_migrations = "2.0.0"
-r2d2_redis = "0.14.0"
-tracing = "0.1.40"
-tracing-subscriber = "0.3.18"
-hyper = { version = "1.2.0", features = ["full"] }
-
-[build-dependencies]
-tonic-build = "0.11.0"
+## See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+#[dependencies]
+#argon2 = "0.6.0-pre.0"
+#axum = "0.7.5"
+#axum-server = "0.6.0"
+#aws-lc-rs = { version = "1.6.2", features = ["bindgen"] }
+#tonic = { version = "0.11.0", features = ["tls", "default"] }
+#tonic-web = "0.11.0"
+#tonic-reflection = "0.11.0"
+#tower = { version = "0.4", features = ["default"] }
+#tower-http = { version = "0.5.2", features = ["cors"] }
+#tower-service = "0.3"
+#prost = "0.12.3"
+#uuid = { version = "1.7.0", features = ["v7", "serde"] }
+#chrono = "0.4.33"
+#prost-types = "0.12.3"
+#tokio = { version = "1.35.1", features = ["full"] }
+#serde = { version = "1.0.196", features = ["derive"] }
+#dotenv = "0.15.0"
+#regex = "1.10.3"
+#async-stream = "0.3.5"
+#derive-new = "0.6.0"
+#tokio-stream = "0.1.14"
+#rustls = "0.23.0"
+#rustls-pemfile = "2.0.0"
+#
+#diesel_migrations = "2.0.0"
+#tracing = "0.1.40"
+#tracing-subscriber = "0.3.18"
+#hyper = { version = "1.2.0", features = ["full"] }
+#
+#[build-dependencies]
+#tonic-build = "0.11.0"
