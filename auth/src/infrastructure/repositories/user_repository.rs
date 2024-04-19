@@ -13,6 +13,7 @@ use derive_new::new;
 use diesel::ExpressionMethods;
 use diesel::{insert_into, QueryDsl, RunQueryDsl, SelectableHelper};
 use std::sync::Arc;
+use autometrics::autometrics;
 use tracing::error;
 
 #[derive(Clone, new)]
@@ -23,6 +24,7 @@ pub struct UserRepositoryImpl<'a> {
 
 impl GetPool for UserRepositoryImpl<'_> {}
 
+#[autometrics]
 impl UserRepository for UserRepositoryImpl<'_> {
     fn create(&self, new_user_information: &UserInformation) -> RepositoryResult<UserInformation> {
         use db::schema::user_information::dsl::user_information;

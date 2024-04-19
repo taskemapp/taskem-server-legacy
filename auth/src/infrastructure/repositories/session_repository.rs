@@ -7,6 +7,7 @@ use r2d2_redis::redis::Commands;
 use std::fmt::Debug;
 use std::ops::Deref;
 use std::sync::Arc;
+use autometrics::autometrics;
 use tracing::{debug, error};
 use uuid::Uuid;
 
@@ -14,6 +15,8 @@ use uuid::Uuid;
 pub struct RedisSessionRepositoryImpl {
     pool: Arc<RedisPool>,
 }
+
+#[autometrics]
 
 impl SessionRepository for RedisSessionRepositoryImpl {
     fn create(&self, user_id: &Uuid) -> Result<String, SessionRepositoryError> {

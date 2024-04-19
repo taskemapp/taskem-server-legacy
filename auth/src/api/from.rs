@@ -1,8 +1,10 @@
+use autometrics::autometrics;
 use crate::auth::{LoginRequest, SignupRequest};
 use crate::domain::models::user::login_information::LoginInformation;
 use crate::domain::models::user::user_information::UserInformation;
 use uuid::Uuid;
 
+#[autometrics]
 impl From<SignupRequest> for UserInformation {
     fn from(value: SignupRequest) -> Self {
         UserInformation {
@@ -14,6 +16,7 @@ impl From<SignupRequest> for UserInformation {
     }
 }
 
+#[autometrics]
 impl From<LoginRequest> for LoginInformation {
     fn from(value: LoginRequest) -> Self {
         LoginInformation {

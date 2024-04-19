@@ -1,3 +1,4 @@
+use autometrics::autometrics;
 use crate::constants::EMAIL;
 use regex::{Error, Regex};
 
@@ -6,6 +7,7 @@ pub struct CachedRegexValidator {
     email: Option<Regex>,
 }
 
+#[autometrics]
 impl CachedRegexValidator {
     pub fn compile_all(&mut self) {
         self.email = Some(Regex::new(EMAIL).unwrap())
