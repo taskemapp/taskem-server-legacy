@@ -2,7 +2,7 @@ use crate::config::{
     CACHE_POOL_EXPIRE_SECONDS, CACHE_POOL_MAX_OPEN, CACHE_POOL_MIN_IDLE, REDIS_CON_STRING,
 };
 use crate::error::redis::RedisPoolError;
-use diesel;
+
 use r2d2_redis::{r2d2, RedisConnectionManager};
 use std::env;
 use std::time::Duration;

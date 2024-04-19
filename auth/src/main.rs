@@ -27,7 +27,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     prometheus_exporter::init();
 
-    let args: Vec<String> = env::args().collect();
+    let _args: Vec<String> = env::args().collect();
 
     #[cfg(debug_assertions)]
     tracing_subscriber::fmt()
