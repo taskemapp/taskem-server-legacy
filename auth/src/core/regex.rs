@@ -1,5 +1,5 @@
-use autometrics::autometrics;
 use crate::constants::EMAIL;
+use autometrics::autometrics;
 use regex::{Error, Regex};
 
 #[derive(Default)]

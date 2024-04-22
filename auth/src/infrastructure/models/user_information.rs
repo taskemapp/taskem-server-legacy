@@ -1,4 +1,5 @@
 use crate::domain::models::user::user_information::UserInformation;
+use autometrics::autometrics;
 use db::schema::user_information;
 use diesel::{Identifiable, Insertable, Queryable, Selectable};
 use uuid::Uuid;
@@ -25,6 +26,7 @@ impl From<UserInformationDiesel> for UserInformation {
     }
 }
 
+#[autometrics]
 impl From<&UserInformationDiesel> for UserInformation {
     fn from(value: &UserInformationDiesel) -> UserInformation {
         UserInformation {
@@ -36,6 +38,7 @@ impl From<&UserInformationDiesel> for UserInformation {
     }
 }
 
+#[autometrics]
 impl From<UserInformation> for UserInformationDiesel {
     fn from(value: UserInformation) -> Self {
         UserInformationDiesel {

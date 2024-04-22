@@ -7,13 +7,13 @@ use crate::infrastructure::models::user_information::UserInformationDiesel;
 use argon2::password_hash::rand_core::OsRng;
 use argon2::password_hash::SaltString;
 use argon2::{Argon2, PasswordHash, PasswordHasher, PasswordVerifier};
+use autometrics::autometrics;
 use db::get_pool::GetPool;
 use db::pool::postgresql::PostgresDBConn;
 use derive_new::new;
 use diesel::ExpressionMethods;
 use diesel::{insert_into, QueryDsl, RunQueryDsl, SelectableHelper};
 use std::sync::Arc;
-use autometrics::autometrics;
 use tracing::error;
 
 #[derive(Clone, new)]

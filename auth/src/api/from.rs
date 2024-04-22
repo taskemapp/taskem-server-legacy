@@ -1,7 +1,7 @@
-use autometrics::autometrics;
 use crate::auth::{LoginRequest, SignupRequest};
 use crate::domain::models::user::login_information::LoginInformation;
 use crate::domain::models::user::user_information::UserInformation;
+use autometrics::autometrics;
 use uuid::Uuid;
 
 #[autometrics]
