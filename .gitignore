@@ -17,7 +17,7 @@ Cargo.lock
 .autometrics
 .idea
 .vscode
-.env
+*.env
 compose.yaml
 certs
 .DS_Store

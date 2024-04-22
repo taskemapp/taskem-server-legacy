@@ -1,12 +1,13 @@
+use crate::constants::EMAIL;
+use autometrics::autometrics;
 use regex::{Error, Regex};
-
-use crate::domain::constants::EMAIL;
 
 #[derive(Default)]
 pub struct CachedRegexValidator {
     email: Option<Regex>,
 }
 
+#[autometrics]
 impl CachedRegexValidator {
     pub fn compile_all(&mut self) {
         self.email = Some(Regex::new(EMAIL).unwrap())

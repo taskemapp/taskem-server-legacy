@@ -1,5 +1,4 @@
 use crate::container::Container;
-
 use autometrics::prometheus_exporter;
 use axum::http::StatusCode;
 use axum::routing::get;
@@ -11,23 +10,16 @@ use std::time::Duration;
 use tonic::transport::Server;
 
 mod api;
+mod constants;
 mod container;
 mod domain;
 mod infrastructure;
 
+mod core;
+
 pub mod auth {
     tonic::include_proto!("auth");
 }
-
-pub mod team {
-    tonic::include_proto!("team");
-}
-
-pub mod task {
-    tonic::include_proto!("task");
-}
-
-mod core;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -35,24 +27,24 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     prometheus_exporter::init();
 
-    let args: Vec<String> = env::args().collect();
+    let _args: Vec<String> = env::args().collect();
 
-    if args.contains(&String::from("debug")) {
-        tracing_subscriber::fmt()
-            .with_max_level(tracing::Level::DEBUG)
-            .init();
-    } else {
-        tracing_subscriber::fmt()
-            .with_max_level(tracing::Level::INFO)
-            .init();
-    }
+    #[cfg(debug_assertions)]
+    tracing_subscriber::fmt()
+        .with_max_level(tracing::Level::DEBUG)
+        .init();
 
-    let addr = "0.0.0.0:50051".parse()?;
+    #[cfg(not(debug_assertions))]
+    tracing_subscriber::fmt()
+        .with_max_level(tracing::Level::INFO)
+        .init();
+
+    let addr = "0.0.0.0:50001".parse()?;
 
     let container = Container::default();
 
     tokio::spawn(async move {
-        tracing::info!(message = "Starting server 🙂", %addr);
+        tracing::info!(message = "Starting auth service 🙂", %addr);
         Server::builder()
             // .tls_config(tls)
             // .expect("Failed to add tls config")
@@ -60,8 +52,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .layer(container.layer)
             .http2_keepalive_interval(Some(Duration::from_secs(3)))
             .add_service(container.auth_server)
-            .add_service(container.team_server)
-            .add_service(container.task_server)
             .serve(addr)
             .await
             .expect("Serve failed");
