@@ -37,6 +37,6 @@ COPY --from=build /lib/${ARCH}-linux-gnu/libkeyutils.so* /lib/${ARCH}-linux-gnu/
 
 COPY --from=build /app/.env /.env
 COPY --from=build /app/migrations /migrations
-COPY --from=build /app/target/release/taskem /taskem
+COPY --from=build /app/target/release/auth /auth
 
-CMD ["/taskem"]
+CMD ["/auth"]
