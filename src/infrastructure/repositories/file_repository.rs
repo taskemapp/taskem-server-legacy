@@ -28,11 +28,11 @@ impl FileRepository for FileRepositoryImpl {
             .body(data)
             .content_type("image/jpeg")
             .send()
+            .await
             .map_err(|e| {
                 tracing::error!("Failed to upload file: {:?}", e);
                 Error::RepositoryError
-            })
-            .await?;
+            })?;
         Ok(())
     }
 
@@ -45,11 +45,11 @@ impl FileRepository for FileRepositoryImpl {
             .key(key)
             .checksum_mode(ChecksumMode::Enabled)
             .send()
+            .await
             .map_err(|e| {
                 tracing::error!("Failed to upload file: {:?}", e);
                 Error::RepositoryError
-            })
-            .await?;
+            })?;
         Ok(file.body)
     }
 
@@ -61,11 +61,11 @@ impl FileRepository for FileRepositoryImpl {
             .bucket(bucket)
             .key(key)
             .send()
+            .await
             .map_err(|e| {
                 tracing::error!("Failed to upload file: {:?}", e);
                 Error::RepositoryError
-            })
-            .await?;
+            })?;
         Ok(())
     }
 }
