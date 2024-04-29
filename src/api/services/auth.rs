@@ -1,6 +1,6 @@
-use autometrics::autometrics;
 use std::sync::Arc;
 
+use autometrics::autometrics;
 use derive_new::new;
 use tonic::{Request, Response, Status};
 use tracing::log::error;
@@ -45,10 +45,7 @@ impl Auth for AuthServiceImpl {
             Ok(_) => Ok(Response::new(SignUpResponse {
                 message: String::from("User successfully created"),
             })),
-            Err(e) => Err(Status::internal(format!(
-                "Internal Server Error: {}",
-                e.message
-            ))),
+            Err(e) => Err(Status::internal(format!("Internal Server Error: {}", e))),
         };
     }
 
@@ -92,10 +89,7 @@ impl Auth for AuthServiceImpl {
             Ok(_) => Ok(Response::new(LogoutResponse {
                 message: "User session removed".to_string(),
             })),
-            Err(e) => Err(Status::internal(format!(
-                "Internal Server Error: {}",
-                e.message
-            ))),
+            Err(e) => Err(Status::internal(format!("Internal Server Error: {}", e))),
         }
     }
 }

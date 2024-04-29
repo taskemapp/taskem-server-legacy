@@ -1,3 +1,4 @@
+mod file_repository;
 mod get_pool;
 mod map_from;
 pub mod role_repository;

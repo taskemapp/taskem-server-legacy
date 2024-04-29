@@ -1,3 +1,12 @@
+use std::str::FromStr;
+use std::sync::Arc;
+
+use autometrics::autometrics;
+use derive_new::new;
+use tonic::{async_trait, Request, Response, Status};
+use tracing::info;
+use uuid::Uuid;
+
 use crate::domain::constants::MIDDLEWARE_AUTH_SESSION_KEY;
 use crate::domain::models::team::team_information::TeamInformation;
 use crate::domain::models::team::team_member::TeamMember;
@@ -10,13 +19,6 @@ use crate::team::{
     GetTeamRolesRequest, GetTeamRolesResponse, JoinTeamRequest, JoinTeamResponse, LeaveTeamRequest,
     LeaveTeamResponse, Role, RolePermission, TeamResponse, UserInfo,
 };
-use autometrics::autometrics;
-use derive_new::new;
-use std::str::FromStr;
-use std::sync::Arc;
-use tonic::{async_trait, Request, Response, Status};
-use tracing::info;
-use uuid::Uuid;
 
 #[derive(new)]
 pub struct TeamServiceImpl {
@@ -67,10 +69,7 @@ impl Team for TeamServiceImpl {
                     .collect(),
                 creator: team.creator.to_string(),
             })),
-            Err(e) => Err(Status::internal(format!(
-                "Internal Server Error: {}",
-                e.message
-            ))),
+            Err(e) => Err(Status::internal(format!("Internal Server Error: {}", e))),
         }
     }
 
@@ -131,10 +130,7 @@ impl Team for TeamServiceImpl {
 
                 Ok(Response::new(GetAllTeamsResponse { teams }))
             }
-            Err(e) => Err(Status::internal(format!(
-                "Internal Server Error: {}",
-                e.message
-            ))),
+            Err(e) => Err(Status::internal(format!("Internal Server Error: {}", e))),
         }
     }
 
@@ -195,10 +191,7 @@ impl Team for TeamServiceImpl {
 
                 Ok(Response::new(GetAllTeamsResponse { teams }))
             }
-            Err(e) => Err(Status::internal(format!(
-                "Internal Server Error: {}",
-                e.message
-            ))),
+            Err(e) => Err(Status::internal(format!("Internal Server Error: {}", e))),
         }
     }
 
@@ -275,10 +268,7 @@ impl Team for TeamServiceImpl {
                 match role_repository.create(&admin_role) {
                     Ok(value) => info!("Role: {} for team: {}", created_team.id, value.name),
                     Err(e) => {
-                        return Err(Status::internal(format!(
-                            "Internal Server Error: {}",
-                            e.message
-                        )));
+                        return Err(Status::internal(format!("Internal Server Error: {}", e)));
                     }
                 }
 
@@ -292,30 +282,21 @@ impl Team for TeamServiceImpl {
                 match team_repository.join(creator) {
                     Ok(_) => {}
                     Err(e) => {
-                        return Err(Status::internal(format!(
-                            "Internal Server Error: {}",
-                            e.message
-                        )));
+                        return Err(Status::internal(format!("Internal Server Error: {}", e)));
                     }
                 }
 
                 match role_repository.create(&manager_role) {
                     Ok(value) => info!("Role: {} for team: {}", created_team.id, value.name),
                     Err(e) => {
-                        return Err(Status::internal(format!(
-                            "Internal Server Error: {}",
-                            e.message
-                        )));
+                        return Err(Status::internal(format!("Internal Server Error: {}", e)));
                     }
                 }
 
                 match role_repository.create(&member_role) {
                     Ok(value) => info!("Role: {} for team: {}", created_team.id, value.name),
                     Err(e) => {
-                        return Err(Status::internal(format!(
-                            "Internal Server Error: {}",
-                            e.message
-                        )));
+                        return Err(Status::internal(format!("Internal Server Error: {}", e)));
                     }
                 }
 
@@ -324,10 +305,7 @@ impl Team for TeamServiceImpl {
                     team_id: created_team.id.to_string(),
                 }))
             }
-            Err(e) => Err(Status::internal(format!(
-                "Internal Server Error: {}",
-                e.message
-            ))),
+            Err(e) => Err(Status::internal(format!("Internal Server Error: {}", e))),
         }
     }
 
@@ -368,10 +346,7 @@ impl Team for TeamServiceImpl {
         let role_id = match role_repository.get_lowest_priority(&team_id) {
             Ok(value) => value.id,
             Err(e) => {
-                return Err(Status::internal(format!(
-                    "Internal Server Error: {}",
-                    e.message
-                )));
+                return Err(Status::internal(format!("Internal Server Error: {}", e)));
             }
         };
 
@@ -386,10 +361,7 @@ impl Team for TeamServiceImpl {
             Ok(_) => Ok(Response::new(JoinTeamResponse {
                 message: String::from("Successfully joined to team"),
             })),
-            Err(e) => Err(Status::internal(format!(
-                "Internal Server Error: {}",
-                e.message
-            ))),
+            Err(e) => Err(Status::internal(format!("Internal Server Error: {}", e))),
         }
     }
 
@@ -424,10 +396,7 @@ impl Team for TeamServiceImpl {
                     })
                     .collect(),
             })),
-            Err(e) => Err(Status::internal(format!(
-                "Internal Server Error: {}",
-                e.message
-            ))),
+            Err(e) => Err(Status::internal(format!("Internal Server Error: {e}",))),
         }
     }
 
@@ -479,10 +448,7 @@ impl Team for TeamServiceImpl {
                 {
                     Ok(value) => value,
                     Err(e) => {
-                        return Err(Status::internal(format!(
-                            "Internal Server Error: {}",
-                            e.message
-                        )));
+                        return Err(Status::internal(format!("Internal Server Error: {}", e)));
                     }
                 };
 
@@ -504,10 +470,7 @@ impl Team for TeamServiceImpl {
                     }),
                 }))
             }
-            Err(e) => Err(Status::internal(format!(
-                "Internal Server Error: {}",
-                e.message
-            ))),
+            Err(e) => Err(Status::internal(format!("Internal Server Error: {}", e))),
         }
     }
 

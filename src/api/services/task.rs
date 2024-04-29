@@ -1,3 +1,12 @@
+use std::str::FromStr;
+use std::sync::Arc;
+
+use autometrics::autometrics;
+use derive_new::new;
+use tonic::{async_trait, Request, Response, Status};
+use tracing::error;
+use uuid::Uuid;
+
 use crate::domain::constants::MIDDLEWARE_AUTH_SESSION_KEY;
 use crate::domain::models::task::task_assign::TaskAssign;
 use crate::domain::models::task::task_information::TaskInformation;
@@ -8,13 +17,6 @@ use crate::task::{
     AssignTaskRequest, CreateTaskRequest, GetAllResponse, GetTaskRequest, GetTeamTasksRequest,
     TaskResponse,
 };
-use autometrics::autometrics;
-use derive_new::new;
-use std::str::FromStr;
-use std::sync::Arc;
-use tonic::{async_trait, Request, Response, Status};
-use tracing::error;
-use uuid::Uuid;
 
 #[derive(new)]
 pub struct TaskServiceImpl {
@@ -64,10 +66,7 @@ impl Task for TaskServiceImpl {
                 }
             }
             Err(e) => {
-                return Err(Status::internal(format!(
-                    "Internal Server Error: {}",
-                    e.message
-                )));
+                return Err(Status::internal(format!("Internal Server Error: {}", e)));
             }
         }
 
@@ -76,10 +75,7 @@ impl Task for TaskServiceImpl {
 
         match task_repository.create(&task_information) {
             Ok(_) => Ok(Response::new(())),
-            Err(e) => Err(Status::internal(format!(
-                "Internal Server Error: {}",
-                e.message
-            ))),
+            Err(e) => Err(Status::internal(format!("Internal Server Error: {}", e))),
         }
     }
 
@@ -90,10 +86,7 @@ impl Task for TaskServiceImpl {
             Ok(value) => Ok(Response::new(GetAllResponse {
                 tasks: value.iter().map(TaskResponse::from).collect(),
             })),
-            Err(e) => Err(Status::internal(format!(
-                "Internal Server Error: {}",
-                e.message
-            ))),
+            Err(e) => Err(Status::internal(format!("Internal Server Error: {}", e))),
         }
     }
 
@@ -115,10 +108,7 @@ impl Task for TaskServiceImpl {
             Ok(value) => Ok(Response::new(GetAllResponse {
                 tasks: value.iter().map(TaskResponse::from).collect(),
             })),
-            Err(e) => Err(Status::internal(format!(
-                "Internal Server Error: {}",
-                e.message
-            ))),
+            Err(e) => Err(Status::internal(format!("Internal Server Error: {}", e))),
         }
     }
 
@@ -151,10 +141,7 @@ impl Task for TaskServiceImpl {
             Ok(value) => Ok(Response::new(GetAllResponse {
                 tasks: value.iter().map(TaskResponse::from).collect(),
             })),
-            Err(e) => Err(Status::internal(format!(
-                "Internal Server Error: {}",
-                e.message
-            ))),
+            Err(e) => Err(Status::internal(format!("Internal Server Error: {}", e))),
         }
     }
 
@@ -178,10 +165,7 @@ impl Task for TaskServiceImpl {
 
                 Ok(Response::new(response))
             }
-            Err(e) => Err(Status::internal(format!(
-                "Internal Server Error: {}",
-                e.message
-            ))),
+            Err(e) => Err(Status::internal(format!("Internal Server Error: {}", e))),
         }
     }
 
@@ -232,10 +216,7 @@ impl Task for TaskServiceImpl {
         let team_id = match task_repository.get(&task_id) {
             Ok(value) => value.team_id,
             Err(e) => {
-                return Err(Status::internal(format!(
-                    "Internal Server Error: {}",
-                    e.message
-                )));
+                return Err(Status::internal(format!("Internal Server Error: {}", e)));
             }
         };
 
@@ -248,20 +229,14 @@ impl Task for TaskServiceImpl {
                     value.priority
                 }
                 Err(e) => {
-                    return Err(Status::internal(format!(
-                        "Internal Server Error: {}",
-                        e.message
-                    )));
+                    return Err(Status::internal(format!("Internal Server Error: {}", e)));
                 }
             };
 
         let assigned_priority = match role_repository.get_by_team_and_user_id(&team_id, &user_id) {
             Ok(value) => value.priority,
             Err(e) => {
-                return Err(Status::internal(format!(
-                    "Internal Server Error: {}",
-                    e.message
-                )));
+                return Err(Status::internal(format!("Internal Server Error: {}", e)));
             }
         };
 
@@ -280,10 +255,7 @@ impl Task for TaskServiceImpl {
                 let assigned_task = match task_repository.get(&value.task_id) {
                     Ok(value) => value,
                     Err(e) => {
-                        return Err(Status::internal(format!(
-                            "Internal Server Error: {}",
-                            e.message
-                        )));
+                        return Err(Status::internal(format!("Internal Server Error: {}", e)));
                     }
                 };
 
@@ -291,10 +263,7 @@ impl Task for TaskServiceImpl {
 
                 Ok(Response::new(response))
             }
-            Err(e) => Err(Status::internal(format!(
-                "Internal Server Error: {}",
-                e.message
-            ))),
+            Err(e) => Err(Status::internal(format!("Internal Server Error: {}", e))),
         }
     }
 }

@@ -1,14 +1,19 @@
-use crate::container::Container;
+use std::env;
+use std::io::Bytes;
+use std::net::SocketAddr;
+use std::time::Duration;
 
 use autometrics::prometheus_exporter;
+use axum::extract::Path;
 use axum::http::StatusCode;
+use axum::response::IntoResponse;
 use axum::routing::get;
 use axum::Router;
 use dotenv::dotenv;
-use std::env;
-use std::net::SocketAddr;
-use std::time::Duration;
+use serde::de::Error;
 use tonic::transport::Server;
+
+use crate::container::Container;
 
 mod api;
 mod container;
@@ -37,15 +42,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let args: Vec<String> = env::args().collect();
 
-    if args.contains(&String::from("debug")) {
-        tracing_subscriber::fmt()
-            .with_max_level(tracing::Level::DEBUG)
-            .init();
-    } else {
-        tracing_subscriber::fmt()
-            .with_max_level(tracing::Level::INFO)
-            .init();
-    }
+    #[cfg(debug_assertions)]
+    tracing_subscriber::fmt()
+        .with_max_level(tracing::Level::DEBUG)
+        .init();
+
+    #[cfg(not(debug_assertions))]
+    tracing_subscriber::fmt()
+        .with_max_level(tracing::Level::ERROR)
+        .init();
 
     let addr = "0.0.0.0:50051".parse()?;
 

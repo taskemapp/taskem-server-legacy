@@ -1,18 +1,20 @@
-use crate::domain::error::RepositoryError;
-use crate::domain::models::user::login_information::LoginInformation;
-use crate::domain::models::user::user_information::UserInformation;
-use crate::domain::repositories::repository::RepositoryResult;
-use crate::domain::repositories::user::UserRepository;
-use crate::infrastructure::databases::postgresql::DBConn;
-use crate::infrastructure::models::user_information::UserInformationDiesel;
-use crate::infrastructure::repositories::get_pool::GetPool;
+use std::sync::Arc;
+
 use argon2::password_hash::rand_core::OsRng;
 use argon2::password_hash::SaltString;
 use argon2::{Argon2, PasswordHash, PasswordHasher, PasswordVerifier};
 use derive_new::new;
 use diesel::{insert_into, ExpressionMethods, QueryDsl, RunQueryDsl, SelectableHelper};
-use std::sync::Arc;
 use tracing::error;
+
+use crate::domain::error::Error;
+use crate::domain::error::Result;
+use crate::domain::models::user::login_information::LoginInformation;
+use crate::domain::models::user::user_information::UserInformation;
+use crate::domain::repositories::user::UserRepository;
+use crate::infrastructure::databases::postgresql::DBConn;
+use crate::infrastructure::models::user_information::UserInformationDiesel;
+use crate::infrastructure::repositories::get_pool::GetPool;
 
 #[derive(Clone, new)]
 pub struct UserRepositoryImpl<'a> {
@@ -23,16 +25,10 @@ pub struct UserRepositoryImpl<'a> {
 impl GetPool for UserRepositoryImpl<'_> {}
 
 impl UserRepository for UserRepositoryImpl<'_> {
-    fn create(&self, new_user_information: &UserInformation) -> RepositoryResult<UserInformation> {
+    fn create(&self, new_user_information: &UserInformation) -> Result<UserInformation> {
         use crate::infrastructure::schema::user_information::dsl::user_information;
 
-        let mut conn = match Self::get_pool(&self.pool) {
-            Ok(value) => value,
-            Err(e) => {
-                error!("{:?}", e);
-                return Err(RepositoryError { message: e.message });
-            }
-        };
+        let mut conn = Self::get_pool(&self.pool).unwrap();
         let mut hashed_user_info = new_user_information.clone();
 
         let salt = SaltString::generate(&mut OsRng);
@@ -43,9 +39,7 @@ impl UserRepository for UserRepositoryImpl<'_> {
             Ok(pass) => pass.to_string(),
             Err(e) => {
                 error!("{:?}", e);
-                return Err(RepositoryError {
-                    message: "Failed password hashing".to_string(),
-                });
+                return Err(Error::RepositoryError);
             }
         };
 
@@ -60,23 +54,15 @@ impl UserRepository for UserRepositoryImpl<'_> {
             Ok(created_user) => Ok(UserInformation::from(created_user)),
             Err(e) => {
                 error!("{:?}", e);
-                Err(RepositoryError {
-                    message: e.to_string(),
-                })
+                Err(Error::RepositoryError)
             }
         }
     }
 
-    fn login(&self, login_information: &LoginInformation) -> RepositoryResult<UserInformation> {
+    fn login(&self, login_information: &LoginInformation) -> Result<UserInformation> {
         use crate::infrastructure::schema::user_information::dsl::*;
 
-        let mut conn = match Self::get_pool(&self.pool) {
-            Ok(value) => value,
-            Err(e) => {
-                error!("{:?}", e);
-                return Err(RepositoryError { message: e.message });
-            }
-        };
+        let mut conn = Self::get_pool(&self.pool).unwrap();
 
         let user = user_information
             .select(UserInformationDiesel::as_select())
@@ -89,9 +75,7 @@ impl UserRepository for UserRepositoryImpl<'_> {
                     Ok(pass) => pass,
                     Err(e) => {
                         error!("{:?}", e);
-                        return Err(RepositoryError {
-                            message: "Incorrect password".to_string(),
-                        });
+                        return Err(Error::RepositoryError);
                     }
                 };
 
@@ -100,16 +84,12 @@ impl UserRepository for UserRepositoryImpl<'_> {
                     .verify_password(login_information.password.as_bytes(), &parsed_hash)
                 {
                     Ok(_) => Ok(UserInformation::from(user_inf)),
-                    Err(_) => Err(RepositoryError {
-                        message: "Incorrect password".to_string(),
-                    }),
+                    Err(_) => Err(Error::RepositoryError),
                 }
             }
             Err(e) => {
                 error!("{:?}", e);
-                Err(RepositoryError {
-                    message: "User doesn't exist".to_string(),
-                })
+                Err(Error::RepositoryError)
             }
         }
     }

@@ -1,15 +1,18 @@
-use crate::domain::constants::ONE_DAY;
-use crate::domain::error::RedisError;
-use crate::domain::repositories::session::RedisSessionRepository;
+use std::fmt::Debug;
+use std::ops::Deref;
+use std::sync::Arc;
+
 use derive_new::new;
 use r2d2_redis::r2d2::Pool;
 use r2d2_redis::redis::Commands;
 use r2d2_redis::RedisConnectionManager;
-use std::fmt::Debug;
-use std::ops::Deref;
-use std::sync::Arc;
 use tracing::{debug, error};
 use uuid::Uuid;
+
+use crate::domain::constants::ONE_DAY;
+use crate::domain::error::Error;
+use crate::domain::error::Result;
+use crate::domain::repositories::session::RedisSessionRepository;
 
 #[derive(new, Clone, Debug)]
 pub struct RedisSessionRepositoryImpl {
@@ -17,7 +20,7 @@ pub struct RedisSessionRepositoryImpl {
 }
 
 impl RedisSessionRepository for RedisSessionRepositoryImpl {
-    fn create(&self, user_id: &Uuid) -> Result<String, RedisError> {
+    fn create(&self, user_id: &Uuid) -> Result<String> {
         let binding = self.pool.clone();
         let client = binding.deref();
         let mut connection = client.get().unwrap();
@@ -41,7 +44,7 @@ impl RedisSessionRepository for RedisSessionRepositoryImpl {
         }
     }
 
-    fn validate(&self, session_id: &str) -> Result<String, RedisError> {
+    fn validate(&self, session_id: &str) -> Result<String> {
         debug!("Session validate id: {}", session_id);
         let binding = self.pool.clone();
         let client = binding.deref();
@@ -54,30 +57,22 @@ impl RedisSessionRepository for RedisSessionRepositoryImpl {
                             let split_session = session_id.split(':').collect::<Vec<&str>>()[1];
                             Ok(split_session.to_string())
                         }
-                        Err(e) => Err(RedisError {
-                            message: e.to_string(),
-                        }),
+                        Err(_) => Err(Error::RedisError),
                     }
                 } else {
-                    Err(RedisError {
-                        message: "Key doesn't exist".to_string(),
-                    })
+                    Err(Error::RedisError)
                 }
             }
             Err(e) => {
                 error!("{}", e);
-                Err(RedisError {
-                    message: "Key doesn't exist".to_string(),
-                })
+                Err(Error::RedisError)
             }
         }
     }
 
-    fn session_expand(&self, session_id: &str) -> Result<(), RedisError> {
+    fn session_expand(&self, session_id: &str) -> Result<()> {
         if self.validate(session_id).is_err() {
-            return Err(RedisError {
-                message: "Key doesn't exist".to_string(),
-            });
+            return Err(Error::RedisError);
         }
 
         let binding = self.pool.clone();
@@ -93,16 +88,14 @@ impl RedisSessionRepository for RedisSessionRepositoryImpl {
         Ok(())
     }
 
-    fn remove_session(&self, session_id: &str) -> Result<(), RedisError> {
+    fn remove_session(&self, session_id: &str) -> Result<()> {
         let binding = self.pool.clone();
         let client = binding.deref();
         let mut connection = client.get().unwrap();
 
         match connection.del::<&str, ()>(session_id) {
             Ok(_) => Ok(()),
-            Err(e) => Err(RedisError {
-                message: format!("Can't delete session: {}", e),
-            }),
+            Err(e) => Err(Error::RedisError),
         }
     }
 }

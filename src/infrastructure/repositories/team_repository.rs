@@ -1,9 +1,18 @@
-use crate::domain::error::RepositoryError;
+use std::sync::Arc;
+
+use derive_new::new;
+use diesel::{
+    delete, insert_into, BelongingToDsl, ExpressionMethods, QueryDsl, RunQueryDsl, SelectableHelper,
+};
+use tracing::error;
+use uuid::Uuid;
+
+use crate::domain::error::Error;
+use crate::domain::error::Result;
 use crate::domain::models::team::team_information::TeamInformation;
 use crate::domain::models::team::team_leave::TeamLeave;
 use crate::domain::models::team::team_member::TeamMember;
 use crate::domain::models::user::user_information::UserInformation;
-use crate::domain::repositories::repository::RepositoryResult;
 use crate::domain::repositories::team::TeamRepository;
 use crate::infrastructure::databases::postgresql::DBConn;
 use crate::infrastructure::models::team_information::TeamInformationDiesel;
@@ -12,13 +21,6 @@ use crate::infrastructure::models::user_information::UserInformationDiesel;
 use crate::infrastructure::repositories::get_pool::GetPool;
 use crate::infrastructure::repositories::map_from::MapFrom;
 use crate::infrastructure::schema::user_information;
-use derive_new::new;
-use diesel::{
-    delete, insert_into, BelongingToDsl, ExpressionMethods, QueryDsl, RunQueryDsl, SelectableHelper,
-};
-use std::sync::Arc;
-use tracing::error;
-use uuid::Uuid;
 
 #[derive(Clone, new)]
 pub struct TeamRepositoryImpl {
@@ -30,17 +32,11 @@ impl MapFrom for TeamRepositoryImpl {}
 impl GetPool for TeamRepositoryImpl {}
 
 impl TeamRepository for TeamRepositoryImpl {
-    fn get(&self, id_team: &Uuid) -> RepositoryResult<TeamInformation> {
+    fn get(&self, id_team: &Uuid) -> Result<TeamInformation> {
         use crate::infrastructure::schema::team_information::dsl::team_information;
         use crate::infrastructure::schema::team_information::id;
 
-        let mut conn = match Self::get_pool(&self.pool) {
-            Ok(value) => value,
-            Err(e) => {
-                error!("{:?}", e);
-                return Err(RepositoryError { message: e.message });
-            }
-        };
+        let mut conn = Self::get_pool(&self.pool).unwrap();
 
         let result = team_information
             .select(TeamInformationDiesel::as_select())
@@ -58,9 +54,7 @@ impl TeamRepository for TeamRepositoryImpl {
                     Ok(value) => value.iter().map(UserInformation::from).collect(),
                     Err(e) => {
                         error!("{:?}", e);
-                        return Err(RepositoryError {
-                            message: e.to_string(),
-                        });
+                        return Err(Error::RepositoryError);
                     }
                 };
 
@@ -71,27 +65,19 @@ impl TeamRepository for TeamRepositoryImpl {
             }
             Err(e) => {
                 error!("{:?}", e);
-                Err(RepositoryError {
-                    message: e.to_string(),
-                })
+                Err(Error::RepositoryError)
             }
         }
     }
 
-    fn get_all_can_join(&self, id_user: &Uuid) -> RepositoryResult<Vec<TeamInformation>> {
+    fn get_all_can_join(&self, id_user: &Uuid) -> Result<Vec<TeamInformation>> {
         use crate::infrastructure::schema::team_information::dsl::creator;
         use crate::infrastructure::schema::team_information::dsl::id;
         use crate::infrastructure::schema::team_information::dsl::team_information;
         use crate::infrastructure::schema::team_member::dsl::team_member;
         use crate::infrastructure::schema::team_member::dsl::user_id;
 
-        let mut conn = match Self::get_pool(&self.pool) {
-            Ok(value) => value,
-            Err(e) => {
-                error!("{:?}", e);
-                return Err(RepositoryError { message: e.message });
-            }
-        };
+        let mut conn = Self::get_pool(&self.pool).unwrap();
 
         let teams_can_join_query = team_member
             .select(TeamMemberDiesel::as_select())
@@ -102,9 +88,7 @@ impl TeamRepository for TeamRepositoryImpl {
             Ok(value) => value.iter().map(|team| team.team_id).collect(),
             Err(e) => {
                 error!("{:?}", e);
-                return Err(RepositoryError {
-                    message: e.to_string(),
-                });
+                return Err(Error::RepositoryError);
             }
         };
 
@@ -143,26 +127,18 @@ impl TeamRepository for TeamRepositoryImpl {
             }
             Err(e) => {
                 error!("{:?}", e);
-                Err(RepositoryError {
-                    message: e.to_string(),
-                })
+                Err(Error::RepositoryError)
             }
         }
     }
 
-    fn get_user_teams(&self, id_user: &Uuid) -> RepositoryResult<Vec<TeamInformation>> {
+    fn get_user_teams(&self, id_user: &Uuid) -> Result<Vec<TeamInformation>> {
         use crate::infrastructure::schema::team_information::dsl::id;
         use crate::infrastructure::schema::team_information::dsl::team_information;
         use crate::infrastructure::schema::team_member::dsl::team_member;
         use crate::infrastructure::schema::team_member::dsl::user_id;
 
-        let mut conn = match Self::get_pool(&self.pool) {
-            Ok(value) => value,
-            Err(e) => {
-                error!("{:?}", e);
-                return Err(RepositoryError { message: e.message });
-            }
-        };
+        let mut conn = Self::get_pool(&self.pool).unwrap();
 
         let teams_membership_query = team_member
             .select(TeamMemberDiesel::as_select())
@@ -173,9 +149,7 @@ impl TeamRepository for TeamRepositoryImpl {
             Ok(value) => value.iter().map(|team| team.team_id).collect(),
             Err(e) => {
                 error!("{:?}", e);
-                return Err(RepositoryError {
-                    message: e.to_string(),
-                });
+                return Err(Error::RepositoryError);
             }
         };
 
@@ -213,24 +187,16 @@ impl TeamRepository for TeamRepositoryImpl {
             }
             Err(e) => {
                 error!("{:?}", e);
-                Err(RepositoryError {
-                    message: e.to_string(),
-                })
+                Err(Error::RepositoryError)
             }
         }
     }
 
-    fn create(&self, new_team_information: &TeamInformation) -> RepositoryResult<TeamInformation> {
+    fn create(&self, new_team_information: &TeamInformation) -> Result<TeamInformation> {
         use crate::infrastructure::schema::team_information::dsl::team_information;
 
         let new_team = TeamInformationDiesel::from(new_team_information.clone());
-        let mut conn = match Self::get_pool(&self.pool) {
-            Ok(value) => value,
-            Err(e) => {
-                error!("{:?}", e);
-                return Err(RepositoryError { message: e.message });
-            }
-        };
+        let mut conn = Self::get_pool(&self.pool).unwrap();
 
         let team_result = insert_into(team_information)
             .values(new_team)
@@ -240,24 +206,16 @@ impl TeamRepository for TeamRepositoryImpl {
             Ok(created_team) => Ok(TeamInformation::from(created_team)),
             Err(e) => {
                 error!("{:?}", e);
-                Err(RepositoryError {
-                    message: e.to_string(),
-                })
+                Err(Error::RepositoryError)
             }
         }
     }
 
-    fn join(&self, new_team_member: &TeamMember) -> RepositoryResult<TeamMember> {
+    fn join(&self, new_team_member: &TeamMember) -> Result<TeamMember> {
         use crate::infrastructure::schema::team_member::dsl::team_member;
 
         let new_member = TeamMemberDiesel::from(new_team_member.clone());
-        let mut conn = match Self::get_pool(&self.pool) {
-            Ok(value) => value,
-            Err(e) => {
-                error!("{:?}", e);
-                return Err(RepositoryError { message: e.message });
-            }
-        };
+        let mut conn = Self::get_pool(&self.pool).unwrap();
 
         let team_member_result = insert_into(team_member)
             .values(new_member)
@@ -267,23 +225,15 @@ impl TeamRepository for TeamRepositoryImpl {
             Ok(joined_member) => Ok(TeamMember::from(joined_member)),
             Err(e) => {
                 error!("{:?}", e);
-                Err(RepositoryError {
-                    message: e.to_string(),
-                })
+                Err(Error::RepositoryError)
             }
         }
     }
 
-    fn leave(&self, leave_information: &TeamLeave) -> RepositoryResult<()> {
+    fn leave(&self, leave_information: &TeamLeave) -> Result<()> {
         use crate::infrastructure::schema::team_member::dsl::*;
 
-        let mut conn = match Self::get_pool(&self.pool) {
-            Ok(value) => value,
-            Err(e) => {
-                error!("{:?}", e);
-                return Err(RepositoryError { message: e.message });
-            }
-        };
+        let mut conn = Self::get_pool(&self.pool).unwrap();
 
         let leave_result = delete(team_member)
             .filter(team_id.eq(leave_information.team_id))
@@ -294,9 +244,7 @@ impl TeamRepository for TeamRepositoryImpl {
             Ok(_) => Ok(()),
             Err(e) => {
                 error!("{:?}", e);
-                Err(RepositoryError {
-                    message: e.to_string(),
-                })
+                Err(Error::RepositoryError)
             }
         }
     }

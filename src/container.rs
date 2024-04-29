@@ -1,8 +1,8 @@
-use argon2::Argon2;
-use diesel_migrations::{FileBasedMigrations, MigrationHarness};
 use std::sync::Arc;
 use std::time::Duration;
 
+use argon2::Argon2;
+use diesel_migrations::{FileBasedMigrations, MigrationHarness};
 use tower::layer::util::{Identity, Stack};
 use tower::timeout::TimeoutLayer;
 
@@ -62,7 +62,8 @@ impl Container {
             .layer(AuthMiddlewareLayer::new(redis_session_repository.clone()))
             .into_inner();
 
-        let auth_service = AuthServiceImpl::new(regex_cache, user_repository, redis_session_repository);
+        let auth_service =
+            AuthServiceImpl::new(regex_cache, user_repository, redis_session_repository);
 
         let team_service = TeamServiceImpl::new(team_repository, role_repository.clone());
         let task_service = TaskServiceImpl::new(task_repository, role_repository);
