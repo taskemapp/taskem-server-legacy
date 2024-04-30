@@ -72,7 +72,7 @@ impl Team for TeamServiceImpl {
         let get_request = request.into_inner();
 
         let team_id = Uuid::from_str(get_request.team_id.as_str())
-            .map_err(|| Status::invalid_argument("Invalid team id"))?;
+            .map_err(|_| Status::invalid_argument("Invalid team id"))?;
 
         match team_repository.get(&team_id) {
             Ok(team) => Ok(Response::new(TeamResponse {
@@ -233,7 +233,7 @@ impl Team for TeamServiceImpl {
         let user_id = extract_user_id_from_metadata!(&request);
 
         let team_id = Uuid::from_str(join_request.team_id.as_str())
-            .map_err(|| Status::invalid_argument("Invalid team id"))?;
+            .map_err(|_| Status::invalid_argument("Invalid team id"))?;
 
         let team_role = role_repository
             .get_lowest_priority(&team_id)
@@ -263,7 +263,7 @@ impl Team for TeamServiceImpl {
         let role_repository = self.role_repository.clone();
 
         let team_id = Uuid::from_str(role_request.team_id.as_str())
-            .map_err(|| Status::invalid_argument("Invalid team id"))?;
+            .map_err(|_| Status::invalid_argument("Invalid team id"))?;
 
         let team_roles = role_repository
             .get_all_for_team(&team_id)
@@ -298,10 +298,10 @@ impl Team for TeamServiceImpl {
         let change_role_request = request.into_inner();
 
         let user_id = Uuid::from_str(change_role_request.user_id.as_str())
-            .map_err(|| Status::invalid_argument("Invalid user id"))?;
+            .map_err(|_| Status::invalid_argument("Invalid user id"))?;
 
         let role_id = Uuid::from_str(change_role_request.role_id.as_str())
-            .map_err(|| Status::invalid_argument("Invalid role id"))?;
+            .map_err(|_| Status::invalid_argument("Invalid role id"))?;
 
         let updated_team_role = role_repository
             .update(&role_id, &user_id)
