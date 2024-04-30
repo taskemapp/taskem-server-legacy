@@ -18,7 +18,7 @@ macro_rules! extract_user_id_from_metadata {
         ) {
             Ok(value) => value,
             Err(_) => {
-                return Err($status);
+                return Err(tonic::Status::invalid_argument("Invalid user id"));
             }
         };
 
