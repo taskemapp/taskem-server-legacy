@@ -93,7 +93,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .layer(Extension(container.file_service_data))
         .layer(ServiceBuilder::new().layer(container.auth_layer));
 
-    let addr = SocketAddr::from(([0, 0, 0, 0], 9000));
+    let addr = SocketAddr::from(([0, 0, 0, 0], 9090));
 
     tracing::info!(message = "Starting axum server for file 📁", %addr);
     let tcp_listen = tokio::net::TcpListener::bind(&addr).await.unwrap();
