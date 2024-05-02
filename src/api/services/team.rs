@@ -4,7 +4,6 @@ use std::sync::Arc;
 use autometrics::autometrics;
 use derive_new::new;
 use tonic::{async_trait, Request, Response, Status};
-use tracing::info;
 use uuid::Uuid;
 
 use crate::domain::constants::MIDDLEWARE_AUTH_SESSION_KEY;
@@ -228,9 +227,9 @@ impl Team for TeamServiceImpl {
         let team_repository = self.team_repository.clone();
         let role_repository = self.role_repository.clone();
 
-        let join_request = request.into_inner();
-
         let user_id = extract_user_id_from_metadata!(&request);
+
+        let join_request = request.into_inner();
 
         let team_id = Uuid::from_str(join_request.team_id.as_str())
             .map_err(|_| Status::invalid_argument("Invalid team id"))?;
@@ -267,7 +266,7 @@ impl Team for TeamServiceImpl {
 
         let team_roles = role_repository
             .get_all_for_team(&team_id)
-            .map_err(|e| Status::internal(format!("Internal Server Error: {e}", )))?;
+            .map_err(|e| Status::internal(format!("Internal Server Error: {e}",)))?;
 
         Ok(Response::new(GetTeamRolesResponse {
             roles: team_roles

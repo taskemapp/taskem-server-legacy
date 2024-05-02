@@ -9,6 +9,7 @@ pub enum Error {
     RepositoryError,
     RedisError,
     FileError,
+    ChecksumError,
     GetPoolError,
     MapFromError,
 }

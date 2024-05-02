@@ -36,6 +36,10 @@ diesel::table! {
         id -> Uuid,
         #[max_length = 25]
         name -> Varchar,
+        #[max_length = 255]
+        image -> Nullable<Varchar>,
+        #[max_length = 255]
+        header_image -> Nullable<Varchar>,
         description -> Text,
         creator -> Uuid,
     }
@@ -69,6 +73,8 @@ diesel::table! {
     user_information (id) {
         id -> Uuid,
         email -> Varchar,
+        #[max_length = 255]
+        profile_image -> Nullable<Varchar>,
         #[max_length = 25]
         user_name -> Varchar,
         password -> Varchar,

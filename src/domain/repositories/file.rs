@@ -1,9 +1,11 @@
-use aws_sdk_s3::primitives::ByteStream;
-
 use crate::domain::error::Result;
+use async_trait::async_trait;
 
+#[cfg_attr(test, mockall::automock)]
+#[async_trait]
 pub trait FileRepository: Send + Sync {
-    async fn upload(&self, bucket: &str, key: &str, data: ByteStream) -> Result<()>;
-    async fn download(&self, bucket: &str, key: &str) -> Result<ByteStream>;
+    async fn upload(&self, bucket: &str, key: &str, data: &[u8]) -> Result<()>;
+    async fn create_bucket(&self, bucket: &str) -> Result<()>;
+    async fn download(&self, bucket: &str, key: &str) -> Result<Vec<u8>>;
     async fn delete(&self, bucket: &str, key: &str) -> Result<()>;
 }

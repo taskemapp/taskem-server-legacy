@@ -12,6 +12,7 @@ use crate::auth::{
 use crate::core::regex::CachedRegexValidator;
 use crate::domain::models::user::login_information::LoginInformation;
 use crate::domain::models::user::user_information::UserInformation;
+use crate::domain::repositories::file::FileRepository;
 use crate::domain::repositories::session::RedisSessionRepository;
 use crate::domain::repositories::user::UserRepository;
 
@@ -20,6 +21,7 @@ pub struct AuthServiceImpl {
     pub(self) regex_cache: Arc<CachedRegexValidator>,
     pub(self) user_repository: Arc<dyn UserRepository>,
     pub(self) redis_repository: Arc<dyn RedisSessionRepository>,
+    pub(self) file_repository: Arc<dyn FileRepository>,
 }
 
 #[autometrics]
@@ -40,13 +42,26 @@ impl Auth for AuthServiceImpl {
         }
 
         let user_repository = self.user_repository.clone();
+        let file_repository = self.file_repository.clone();
 
-        return match user_repository.create(&UserInformation::from(sign_up_request)) {
-            Ok(_) => Ok(Response::new(SignUpResponse {
-                message: String::from("User successfully created"),
-            })),
-            Err(e) => Err(Status::internal(format!("Internal Server Error: {}", e))),
-        };
+        user_repository
+            .create(&UserInformation::from(sign_up_request.clone()))
+            .map_err(|e| {
+                error!("{:?}", e);
+                Status::internal("User creation failed")
+            })?;
+
+        file_repository
+            .create_bucket(&sign_up_request.user_name)
+            .await
+            .map_err(|e| {
+                error!("{:?}", e);
+                Status::internal("Bucket creation failed")
+            })?;
+
+        Ok(Response::new(SignUpResponse {
+            message: String::from("User successfully created"),
+        }))
     }
 
     async fn login(

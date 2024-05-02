@@ -10,6 +10,7 @@ use uuid::Uuid;
 pub struct UserInformationDiesel {
     pub id: Uuid,
     pub password: String,
+    pub profile_image: Option<String>,
     pub user_name: String,
     pub email: String,
 }
@@ -20,6 +21,7 @@ impl From<UserInformationDiesel> for UserInformation {
             id: value.id,
             password: value.password,
             user_name: value.user_name,
+            profile_image: value.profile_image,
             email: value.email,
         }
     }
@@ -31,6 +33,7 @@ impl From<&UserInformationDiesel> for UserInformation {
             id: value.id,
             password: value.password.clone(),
             user_name: value.user_name.clone(),
+            profile_image: value.profile_image.clone(),
             email: value.email.clone(),
         }
     }
@@ -42,6 +45,7 @@ impl From<UserInformation> for UserInformationDiesel {
             id: value.id,
             password: value.password,
             user_name: value.user_name,
+            profile_image: value.profile_image,
             email: value.email,
         }
     }

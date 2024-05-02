@@ -1,6 +1,8 @@
 #[macro_export]
 macro_rules! extract_user_id_from_metadata {
     ($request:expr) => {{
+        use std::str::FromStr;
+
         let metadata = $request.metadata().clone();
 
         if !metadata.contains_key(MIDDLEWARE_AUTH_SESSION_KEY) {

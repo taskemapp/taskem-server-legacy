@@ -1,12 +1,3 @@
-use std::sync::Arc;
-
-use argon2::password_hash::rand_core::OsRng;
-use argon2::password_hash::SaltString;
-use argon2::{Argon2, PasswordHash, PasswordHasher, PasswordVerifier};
-use derive_new::new;
-use diesel::{insert_into, ExpressionMethods, QueryDsl, RunQueryDsl, SelectableHelper};
-use tracing::error;
-
 use crate::domain::error::Error;
 use crate::domain::error::Result;
 use crate::domain::models::user::login_information::LoginInformation;
@@ -15,6 +6,14 @@ use crate::domain::repositories::user::UserRepository;
 use crate::infrastructure::databases::postgresql::DBConn;
 use crate::infrastructure::models::user_information::UserInformationDiesel;
 use crate::infrastructure::repositories::get_pool::GetPool;
+use argon2::password_hash::rand_core::OsRng;
+use argon2::password_hash::SaltString;
+use argon2::{Argon2, PasswordHash, PasswordHasher, PasswordVerifier};
+use derive_new::new;
+use diesel::{insert_into, update, ExpressionMethods, QueryDsl, RunQueryDsl, SelectableHelper};
+use std::sync::Arc;
+use tracing::error;
+use uuid::Uuid;
 
 #[derive(Clone, new)]
 pub struct UserRepositoryImpl<'a> {
@@ -46,17 +45,71 @@ impl UserRepository for UserRepositoryImpl<'_> {
         hashed_user_info.password = password_hash;
 
         let new_user_information_diesel = UserInformationDiesel::from(hashed_user_info);
-        let user_result = insert_into(user_information)
-            .values(new_user_information_diesel)
-            .get_result::<UserInformationDiesel>(&mut conn);
 
-        match user_result {
-            Ok(created_user) => Ok(UserInformation::from(created_user)),
-            Err(e) => {
+        let created_user = insert_into(user_information)
+            .values(new_user_information_diesel)
+            .get_result::<UserInformationDiesel>(&mut conn)
+            .map_err(|e| {
                 error!("{:?}", e);
-                Err(Error::RepositoryError)
-            }
-        }
+                Error::RepositoryError
+            })?;
+
+        Ok(UserInformation::from(created_user))
+    }
+
+    fn set_profile_picture(
+        &self,
+        user_id: &Uuid,
+        profile_picture: &str,
+    ) -> Result<UserInformation> {
+        use crate::infrastructure::schema::user_information::dsl::*;
+
+        let mut conn = Self::get_pool(&self.pool).unwrap();
+
+        let updated_user = update(user_information)
+            .filter(id.eq(user_id))
+            .set(profile_image.eq(profile_picture))
+            .get_result::<UserInformationDiesel>(&mut conn)
+            .map_err(|e| {
+                error!("{:?}", e);
+                Error::RepositoryError
+            })?;
+
+        Ok(UserInformation::from(updated_user))
+    }
+
+    fn get(&self, user_id: &Uuid) -> Result<UserInformation> {
+        use crate::infrastructure::schema::user_information::dsl::*;
+
+        let mut conn = Self::get_pool(&self.pool).unwrap();
+
+        let user = user_information
+            .filter(id.eq(user_id))
+            .select(UserInformationDiesel::as_select())
+            .first(&mut conn)
+            .map_err(|e| {
+                error!("{:?}", e);
+                Error::RepositoryError
+            })?;
+
+        Ok(UserInformation::from(user))
+    }
+
+    fn get_by_name(&self, provided_user_name: &str) -> Result<UserInformation> {
+        use crate::infrastructure::schema::user_information::dsl::*;
+
+        let mut conn = Self::get_pool(&self.pool).unwrap();
+
+        let user = user_information
+            .filter(user_name.eq(provided_user_name))
+            .select(UserInformationDiesel::as_select())
+            .first(&mut conn)
+            .map_err(|e| {
+                error!("{:?}", e);
+                Error::RepositoryError
+            })?;
+
+        Ok(UserInformation::from(user))
     }
 
     fn login(&self, login_information: &LoginInformation) -> Result<UserInformation> {

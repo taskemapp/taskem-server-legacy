@@ -4,7 +4,7 @@ use derive_new::new;
 use diesel::{
     delete, insert_into, BelongingToDsl, ExpressionMethods, QueryDsl, RunQueryDsl, SelectableHelper,
 };
-use tracing::error;
+use tracing::{debug, error};
 use uuid::Uuid;
 
 use crate::domain::error::Error;
@@ -79,57 +79,53 @@ impl TeamRepository for TeamRepositoryImpl {
 
         let mut conn = Self::get_pool(&self.pool).unwrap();
 
-        let teams_can_join_query = team_member
+        let team_consists: Vec<Uuid> = team_member
             .select(TeamMemberDiesel::as_select())
-            .filter(user_id.ne(id_user))
-            .load(&mut conn);
-
-        let teams_can_join: Vec<uuid::Uuid> = match teams_can_join_query {
-            Ok(value) => value.iter().map(|team| team.team_id).collect(),
-            Err(e) => {
+            .filter(user_id.eq(id_user))
+            .load(&mut conn)
+            .map_err(|e| {
                 error!("{:?}", e);
-                return Err(Error::RepositoryError);
-            }
-        };
+                Error::RepositoryError
+            })?
+            .iter()
+            .map(|team| team.team_id)
+            .collect();
 
-        let result = team_information
-            .filter(id.eq_any(&teams_can_join))
+        debug!("Teams can join: {:?}", team_consists);
+
+        let teams_diesel = team_information
+            .filter(id.ne_all(&team_consists))
             .filter(creator.ne(id_user))
             .select(TeamInformationDiesel::as_select())
             .limit(1000)
-            .load(&mut conn);
-
-        match result {
-            Ok(value) => {
-                let teams: Vec<TeamInformation> = value
-                    .iter()
-                    .map(|team_info| {
-                        let query = TeamMemberDiesel::belonging_to(&team_info)
-                            .inner_join(user_information::table)
-                            .select(UserInformationDiesel::as_select())
-                            .load(&mut conn);
-
-                        let users: Vec<UserInformation> = query
-                            .unwrap_or_else(|_| {
-                                panic!("Failed to get users for a team: {}", &team_info.id)
-                            })
-                            .iter()
-                            .map(UserInformation::from)
-                            .collect();
-
-                        let mut team = TeamInformation::from(team_info);
-
-                        team.members = users;
-                        team
-                    })
-                    .collect();
-                Ok(teams)
-            }
-            Err(e) => {
+            .load(&mut conn)
+            .map_err(|e| {
                 error!("{:?}", e);
-                Err(Error::RepositoryError)
-            }
-        }
+                Error::RepositoryError
+            })?;
+
+        let teams: Vec<TeamInformation> = teams_diesel
+            .iter()
+            .map(|team_info| {
+                let query = TeamMemberDiesel::belonging_to(&team_info)
+                    .inner_join(user_information::table)
+                    .select(UserInformationDiesel::as_select())
+                    .load(&mut conn);
+
+                let users: Vec<UserInformation> = query
+                    .unwrap_or_else(|_| panic!("Failed to get users for a team: {}", &team_info.id))
+                    .iter()
+                    .map(UserInformation::from)
+                    .collect();
+
+                let mut team = TeamInformation::from(team_info);
+
+                team.members = users;
+                team
+            })
+            .collect();
+
+        Ok(teams)
     }
 
     fn get_user_teams(&self, id_user: &Uuid) -> Result<Vec<TeamInformation>> {
