@@ -2,7 +2,7 @@ use crate::domain::error::Error;
 use crate::domain::repositories::file::FileRepository;
 use autometrics::autometrics;
 use aws_sdk_s3::primitives::ByteStream;
-use aws_sdk_s3::types::ChecksumMode;
+use aws_sdk_s3::types::{BucketInfo, BucketType, ChecksumMode};
 use aws_sdk_s3::Client;
 use derive_new::new;
 use sha2::{Digest, Sha256};
@@ -43,22 +43,6 @@ impl FileRepository for FileRepositoryImpl {
         let result_checksum = result.checksum_sha256.ok_or(Error::ChecksumError)?;
 
         if checksum.ne(&result_checksum) {}
-
-        Ok(())
-    }
-
-    async fn create_bucket(&self, bucket: &str) -> crate::domain::error::Result<()> {
-        let client = self.client.clone();
-
-        client
-            .create_bucket()
-            .bucket(bucket)
-            .send()
-            .await
-            .map_err(|e| {
-                tracing::error!("Failed to create bucket: {:?}", e);
-                Error::RepositoryError
-            })?;
 
         Ok(())
     }

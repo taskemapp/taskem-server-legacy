@@ -21,7 +21,6 @@ pub struct AuthServiceImpl {
     pub(self) regex_cache: Arc<CachedRegexValidator>,
     pub(self) user_repository: Arc<dyn UserRepository>,
     pub(self) redis_repository: Arc<dyn RedisSessionRepository>,
-    pub(self) file_repository: Arc<dyn FileRepository>,
 }
 
 #[autometrics]
@@ -42,21 +41,12 @@ impl Auth for AuthServiceImpl {
         }
 
         let user_repository = self.user_repository.clone();
-        let file_repository = self.file_repository.clone();
 
         user_repository
             .create(&UserInformation::from(sign_up_request.clone()))
             .map_err(|e| {
                 error!("{:?}", e);
                 Status::internal("User creation failed")
-            })?;
-
-        file_repository
-            .create_bucket(&sign_up_request.user_name)
-            .await
-            .map_err(|e| {
-                error!("{:?}", e);
-                Status::internal("Bucket creation failed")
             })?;
 
         Ok(Response::new(SignUpResponse {

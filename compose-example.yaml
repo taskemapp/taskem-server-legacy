@@ -34,20 +34,25 @@ services:
     environment:
       MINIO_ROOT_USER: root
       MINIO_ROOT_PASSWORD: YOUR_PASSWORD
+      MINIO_DOMAIN: minio
+    networks:
+      default:
+        aliases:
+          - users.minio
+          - teams.minio
 
   server:
     restart: always
     build:
       context: .
     depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+      - db
+      - minio
+      - redis
     ports:
       - 50051:50051
+      - 9600:9090
       - 3000:3000
-      - 12000:9090
 
 volumes:
   db-data:

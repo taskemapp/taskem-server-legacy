@@ -63,13 +63,22 @@ impl Container {
         let redis_pool = Arc::new(redis_pool().unwrap());
         let argon2 = Arc::new(Argon2::default());
 
-        let region = std::env::var("AWS_REGION").unwrap();
-        let endpoint = std::env::var("S3_ENDPOINT").unwrap();
-        let access_key = std::env::var("AWS_ACCESS_KEY_ID").unwrap();
-        let secret_key = std::env::var("AWS_SECRET_ACCESS_KEY").unwrap();
-        let s3_client = Arc::new(
-            Container::create_s3_client(region, endpoint.clone(), access_key, secret_key).await,
-        );
+        let aws_config = aws_config::load_from_env().await;
+        let s3_client = Arc::new(Client::new(&aws_config));
+
+        s3_client
+            .create_bucket()
+            .bucket("users")
+            .send()
+            .await
+            .unwrap();
+
+        s3_client
+            .create_bucket()
+            .bucket("teams")
+            .send()
+            .await
+            .unwrap();
 
         let user_repository = Arc::new(UserRepositoryImpl::new(pool.clone(), argon2.clone()));
         let team_repository = Arc::new(TeamRepositoryImpl::new(pool.clone()));
@@ -88,12 +97,14 @@ impl Container {
             regex_cache,
             user_repository.clone(),
             redis_session_repository,
-            file_repository.clone(),
         );
         let team_service = TeamServiceImpl::new(team_repository, role_repository.clone());
         let task_service = TaskServiceImpl::new(task_repository, role_repository);
-        let profile_service =
-            ProfileServiceImpl::new(file_repository.clone(), user_repository.clone(), endpoint);
+        let profile_service = ProfileServiceImpl::new(
+            file_repository.clone(),
+            user_repository.clone(),
+            String::from("localhost/file"),
+        );
 
         let auth_server = AuthServer::new(auth_service);
         let team_server = TeamServer::new(team_service);
@@ -111,29 +122,5 @@ impl Container {
             file_service_data,
             layer,
         }
-    }
-}
-
-#[autometrics]
-impl Container {
-    async fn create_s3_client(
-        region: String,
-        endpoint: String,
-        access_key: String,
-        secret_key: String,
-    ) -> Client {
-        let cred_provider = Credentials::new(access_key, secret_key, None, None, "minio");
-        let region_provider = RegionProviderChain::first_try(Region::new(region));
-        let config = aws_config::from_env()
-            .credentials_provider(cred_provider)
-            .region(region_provider)
-            .load()
-            .await;
-
-        let s3_config = aws_sdk_s3::config::Builder::from(&config)
-            .endpoint_url(endpoint)
-            .build();
-
-        Client::from_conf(s3_config)
     }
 }

@@ -56,8 +56,8 @@ impl Profile for ProfileServiceImpl {
 
         file_repository
             .upload(
-                &user.user_name,
-                "avatar.jpg",
+                "users",
+                format!("{}/{}", user.user_name, "avatar.jpg").as_str(),
                 add_or_update_request.avatar_image.as_slice(),
             )
             .await
