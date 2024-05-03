@@ -20,9 +20,9 @@ pub struct AuthMiddlewareLayer {
 impl<S> Layer<S> for AuthMiddlewareLayer {
     type Service = AuthMiddleware<S>;
 
-    fn layer(&self, service: S) -> Self::Service {
+    fn layer(&self, inner: S) -> Self::Service {
         AuthMiddleware {
-            inner: service,
+            inner,
             redis_repository: self.redis_repository.clone(),
         }
     }
@@ -89,6 +89,50 @@ where
                 .body(BoxBody::default())
                 .unwrap();
             Ok(res)
+        })
+    }
+}
+
+impl<S> Service<axum::extract::Request> for AuthMiddleware<S>
+where
+    S: Service<axum::extract::Request, Response = axum::response::Response> + Send + 'static,
+    S::Future: Send + 'static,
+{
+    type Response = S::Response;
+    type Error = S::Error;
+    type Future = BoxFuture<'static, Result<Self::Response, Self::Error>>;
+
+    fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+        self.inner.poll_ready(cx)
+    }
+
+    fn call(&mut self, request: axum::extract::Request) -> Self::Future {
+        let headers = request.headers();
+
+        debug!("Find authorization header");
+
+        if let Some(header_value) = headers.get(MIDDLEWARE_AUTH_SESSION_KEY) {
+            let value = header_value
+                .to_str()
+                .expect("Can't convert header value to str");
+            let session = format!("session_id:{}", value);
+
+            if self.redis_repository.session_expand(&session).is_ok() {
+                info!("Session expanded");
+                let future = self.inner.call(request);
+                return Box::pin(async move {
+                    let response: axum::response::Response = future.await?;
+                    Ok(response)
+                });
+            }
+        }
+
+        debug!("Unauthorized");
+        Box::pin(async move {
+            Ok(axum::http::Response::builder()
+                .status(StatusCode::UNAUTHORIZED)
+                .body(axum::body::Body::empty())
+                .unwrap())
         })
     }
 }

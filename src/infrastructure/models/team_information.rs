@@ -12,6 +12,8 @@ use uuid::Uuid;
 pub struct TeamInformationDiesel {
     pub id: Uuid,
     pub name: String,
+    pub image: Option<String>,
+    pub header_image: Option<String>,
     pub description: String,
     pub creator: Uuid,
 }
@@ -23,6 +25,8 @@ impl From<TeamInformationDiesel> for TeamInformation {
             name: value.name,
             description: value.description,
             creator: value.creator,
+            image: value.image,
+            header_image: value.header_image,
             members: Vec::new(),
         }
     }
@@ -34,6 +38,8 @@ impl From<&TeamInformationDiesel> for TeamInformation {
             id: value.id,
             name: value.name.clone(),
             description: value.description.clone(),
+            image: value.image.clone(),
+            header_image: value.header_image.clone(),
             creator: value.creator,
             members: Vec::new(),
         }
@@ -46,6 +52,8 @@ impl From<TeamInformation> for TeamInformationDiesel {
             id: value.id,
             name: value.name,
             description: value.description,
+            image: value.image,
+            header_image: value.header_image,
             creator: value.creator,
         }
     }

@@ -21,3 +21,4 @@ Cargo.lock
 compose.yaml
 certs
 .DS_Store
+proto

@@ -20,6 +20,7 @@ impl From<SignupRequest> for UserInformation {
             id: Uuid::now_v7(),
             email: value.email,
             user_name: value.user_name,
+            profile_image: None,
             password: value.password,
         }
     }
@@ -40,6 +41,8 @@ impl From<CreateTeamRequest> for TeamInformation {
             id: Uuid::now_v7(),
             name: value.name,
             description: value.description,
+            header_image: None,
+            image: None,
             creator: Uuid::default(),
             members: Vec::new(),
         }
