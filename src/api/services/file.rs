@@ -41,7 +41,7 @@ pub async fn user_file_handler(
     //     .unwrap();
 
     file_repository
-        .download(&user_name, &file_name)
+        .download("users", format!("{}/{}", user_name, file_name).as_str())
         .await
         .map_err(|e| {
             tracing::error!("{:?}", e);
