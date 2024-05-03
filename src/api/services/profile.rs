@@ -4,6 +4,7 @@ use crate::domain::repositories::user::UserRepository;
 use crate::extract_user_id_from_metadata;
 use crate::profile::profile_server::Profile;
 use crate::profile::AddOrUpdateAvatarRequest;
+use crate::profile::GetProfileResponse;
 use autometrics::autometrics;
 use derive_new::new;
 use std::sync::Arc;
@@ -64,5 +65,12 @@ impl Profile for ProfileServiceImpl {
             .map_err(|e| Status::internal(format!("Internal Server Error: {}", e)))?;
 
         Ok(Response::new(()))
+    }
+
+    async fn get_profile(
+        &self,
+        request: Request<()>,
+    ) -> Result<Response<GetProfileResponse>, Status> {
+        todo!()
     }
 }
