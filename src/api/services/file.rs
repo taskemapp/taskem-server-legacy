@@ -45,7 +45,7 @@ pub async fn user_file_handler(
         .await
         .map_err(|e| {
             tracing::error!("{:?}", e);
-            StatusCode::NOT_FOUND
+            (StatusCode::NOT_FOUND, e.to_string())
         })
         .unwrap()
 }
