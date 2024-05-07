@@ -89,7 +89,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     });
 
     let app = Router::new()
-        .route("/file/users/:user_name/:file_name", get(user_file_handler))
+        .nest(
+            "/file",
+            Router::new().route("/users/:user_name/:file_name", get(user_file_handler)),
+        )
         .layer(Extension(container.file_service_data))
         .layer(ServiceBuilder::new().layer(container.auth_layer));
 
