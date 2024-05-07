@@ -35,7 +35,7 @@ impl Profile for ProfileServiceImpl {
             return Err(Status::invalid_argument("Empty avatar image"));
         }
 
-        if add_or_update_request.avatar_image.len() > 1024 * 4 {
+        if add_or_update_request.avatar_image.len() > 4 * 1024 * 1024 {
             return Err(Status::invalid_argument(
                 "Invalid picture size, must be less than 4MB",
             ));
