@@ -11,5 +11,5 @@ pub trait TaskRepository: Send + Sync {
     fn get_all_for_user(&self, user_id: &Uuid) -> Result<Vec<TaskInformation>>;
     fn create(&self, new_task_information: &TaskInformation) -> Result<TaskInformation>;
     fn assign(&self, new_task_assign: &TaskAssign) -> Result<TaskAssign>;
-    fn finish_task(&self, new_task_assign: &TaskAssign) -> Result<TaskAssign>;
+    fn complete(&self, task_id: &Uuid) -> Result<TaskInformation>;
 }
