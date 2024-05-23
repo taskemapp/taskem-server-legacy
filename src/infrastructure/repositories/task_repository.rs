@@ -255,7 +255,22 @@ impl TaskRepository for TaskRepositoryImpl {
         }
     }
 
-    fn finish_task(&self, _: &TaskAssign) -> Result<TaskAssign> {
-        todo!()
+    fn complete(&self, task_id: &Uuid) -> Result<TaskInformation> {
+        use crate::infrastructure::schema::task_information::dsl::id;
+        use crate::infrastructure::schema::task_information::dsl::status;
+        use crate::infrastructure::schema::task_information::dsl::task_information;
+
+        let mut conn = Self::get_pool(&self.pool).unwrap();
+
+        let task = update(task_information)
+            .filter(id.eq(task_id))
+            .set(status.eq(TaskStatusDiesel::from(TaskStatus::Finished)))
+            .get_result::<TaskInformationDiesel>(&mut conn)
+            .map_err(|e| {
+                error!("{:?}", e);
+                Error::RepositoryError
+            })?;
+
+        Ok(TaskInformation::from(task))
     }
 }

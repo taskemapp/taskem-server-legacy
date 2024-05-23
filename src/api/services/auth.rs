@@ -12,7 +12,6 @@ use crate::auth::{
 use crate::core::regex::CachedRegexValidator;
 use crate::domain::models::user::login_information::LoginInformation;
 use crate::domain::models::user::user_information::UserInformation;
-use crate::domain::repositories::file::FileRepository;
 use crate::domain::repositories::session::RedisSessionRepository;
 use crate::domain::repositories::user::UserRepository;
 
@@ -70,7 +69,7 @@ impl Auth for AuthServiceImpl {
             Ok(value) => {
                 let session = self.redis_repository.create(&value.id).unwrap();
                 return Ok(Response::new(LoginResponse {
-                    success: true,
+                    user_name: value.user_name,
                     message: "User successfully logged".to_string(),
                     session_id: session,
                 }));

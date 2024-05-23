@@ -14,8 +14,8 @@ use crate::domain::repositories::role::RoleRepository;
 use crate::domain::repositories::task::TaskRepository;
 use crate::task::task_server::Task;
 use crate::task::{
-    AssignTaskRequest, CreateTaskRequest, GetAllResponse, GetTaskRequest, GetTeamTasksRequest,
-    TaskResponse,
+    AssignTaskRequest, CompleteTaskRequest, CreateTaskRequest, GetAllResponse, GetTaskRequest,
+    GetTeamTasksRequest, TaskResponse,
 };
 
 #[derive(new)]
@@ -265,5 +265,22 @@ impl Task for TaskServiceImpl {
             }
             Err(e) => Err(Status::internal(format!("Internal Server Error: {}", e))),
         }
+    }
+
+    async fn complete(
+        &self,
+        request: Request<CompleteTaskRequest>,
+    ) -> Result<Response<()>, Status> {
+        let task_repository = self.task_repository.clone();
+        let complete_request = request.into_inner();
+
+        let task_id = Uuid::from_str(complete_request.task_id.as_str())
+            .map_err(|_| Status::invalid_argument("Invalid task id"))?;
+
+        task_repository
+            .complete(&task_id)
+            .map_err(|e| Status::internal(format!("Internal Server Error: {}", e)))?;
+
+        Ok(Response::new(()))
     }
 }

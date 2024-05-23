@@ -46,7 +46,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     #[cfg(not(debug_assertions))]
     tracing_subscriber::fmt()
-        .with_max_level(tracing::Level::ERROR)
+        .with_max_level(tracing::Level::INFO)
         .init();
 
     let addr = "0.0.0.0:50051".parse()?;
@@ -89,7 +89,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     });
 
     let app = Router::new()
-        .route("/file", get(user_file_handler))
+        .nest(
+            "/file",
+            Router::new().route("/users/:user_name/:file_name", get(user_file_handler)),
+        )
         .layer(Extension(container.file_service_data))
         .layer(ServiceBuilder::new().layer(container.auth_layer));
 
