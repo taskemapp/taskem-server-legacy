@@ -1,13 +1,19 @@
-pub mod auth_tests {
+mod common;
+
+#[cfg(test)]
+mod auth_tests {
     mod auth {
         tonic::include_proto!("auth");
     }
 
     use auth::*;
 
+    use crate::common;
+
     #[tokio::test]
     async fn sign_up() {
-        let channel = tonic::transport::Channel::from_static("http://[::1]:50051")
+        common::setup();
+        let channel = tonic::transport::Channel::from_static("http://0.0.0.0:50051")
             .connect()
             .await
             .unwrap();
@@ -22,7 +28,7 @@ pub mod auth_tests {
 
     #[tokio::test]
     async fn login() {
-        let channel = tonic::transport::Channel::from_static("http://[::1]:50051")
+        let channel = tonic::transport::Channel::from_static("http://0.0.0.0:50051")
             .connect()
             .await
             .unwrap();
