@@ -1,4 +1,4 @@
-use crate::domain::error::Error;
+use crate::common::Error;
 use crate::domain::repositories::file::FileRepository;
 use autometrics::autometrics;
 use aws_sdk_s3::primitives::ByteStream;
@@ -16,12 +16,7 @@ pub struct FileRepositoryImpl {
 #[async_trait::async_trait]
 #[autometrics]
 impl FileRepository for FileRepositoryImpl {
-    async fn upload(
-        &self,
-        bucket: &str,
-        key: &str,
-        data: &[u8],
-    ) -> crate::domain::error::Result<()> {
+    async fn upload(&self, bucket: &str, key: &str, data: &[u8]) -> crate::common::Result<()> {
         let client = self.client.clone();
         let hash = Sha256::digest(b"hello world");
 
@@ -37,17 +32,17 @@ impl FileRepository for FileRepositoryImpl {
             .await
             .map_err(|e| {
                 tracing::error!("Failed to upload file: {:?}", e);
-                Error::RepositoryError
+                Error::Repository
             })?;
 
-        let result_checksum = result.checksum_sha256.ok_or(Error::ChecksumError)?;
+        let result_checksum = result.checksum_sha256.ok_or(Error::Checksum)?;
 
         if checksum.ne(&result_checksum) {}
 
         Ok(())
     }
 
-    async fn download(&self, bucket: &str, key: &str) -> crate::domain::error::Result<Vec<u8>> {
+    async fn download(&self, bucket: &str, key: &str) -> crate::common::Result<Vec<u8>> {
         let client = self.client.clone();
 
         let file = client
@@ -59,18 +54,18 @@ impl FileRepository for FileRepositoryImpl {
             .await
             .map_err(|e| {
                 tracing::error!("Failed to upload file: {:?}", e);
-                Error::RepositoryError
+                Error::Repository
             })?;
 
         let bytes = file.body.collect().await.map_err(|e| {
             tracing::error!("Failed to read file: {:?}", e);
-            Error::RepositoryError
+            Error::Repository
         })?;
 
         Ok(bytes.to_vec())
     }
 
-    async fn delete(&self, bucket: &str, key: &str) -> crate::domain::error::Result<()> {
+    async fn delete(&self, bucket: &str, key: &str) -> crate::common::Result<()> {
         let client = self.client.clone();
 
         client
@@ -81,7 +76,7 @@ impl FileRepository for FileRepositoryImpl {
             .await
             .map_err(|e| {
                 tracing::error!("Failed to upload file: {:?}", e);
-                Error::RepositoryError
+                Error::Repository
             })?;
         Ok(())
     }
@@ -89,7 +84,7 @@ impl FileRepository for FileRepositoryImpl {
 
 #[cfg(test)]
 mod tests {
-    use crate::domain::error::Error;
+    use crate::common::Error;
     use crate::domain::repositories::file::{FileRepository, MockFileRepository};
     use mockall::predicate::eq;
 
@@ -119,7 +114,7 @@ mod tests {
         mock.expect_download()
             .with(eq("test-bucket"), eq("notfound.txt"))
             .times(1)
-            .returning(|_, _| Err(Error::FileError));
+            .returning(|_, _| Err(Error::File));
 
         let result_failed = mock.download("test-bucket", "notfound.txt").await;
         assert!(result_failed.is_err());

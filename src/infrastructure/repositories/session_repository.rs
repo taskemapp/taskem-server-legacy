@@ -9,9 +9,9 @@ use r2d2_redis::RedisConnectionManager;
 use tracing::{debug, error};
 use uuid::Uuid;
 
+use crate::common::Error;
+use crate::common::Result;
 use crate::domain::constants::ONE_DAY;
-use crate::domain::error::Error;
-use crate::domain::error::Result;
 use crate::domain::repositories::session::RedisSessionRepository;
 
 #[derive(new, Clone, Debug)]
@@ -57,22 +57,22 @@ impl RedisSessionRepository for RedisSessionRepositoryImpl {
                             let split_session = session_id.split(':').collect::<Vec<&str>>()[1];
                             Ok(split_session.to_string())
                         }
-                        Err(_) => Err(Error::RedisError),
+                        Err(_) => Err(Error::Redis),
                     }
                 } else {
-                    Err(Error::RedisError)
+                    Err(Error::Redis)
                 }
             }
             Err(e) => {
                 error!("{}", e);
-                Err(Error::RedisError)
+                Err(Error::Redis)
             }
         }
     }
 
     fn session_expand(&self, session_id: &str) -> Result<()> {
         if self.validate(session_id).is_err() {
-            return Err(Error::RedisError);
+            return Err(Error::Redis);
         }
 
         let binding = self.pool.clone();
@@ -95,7 +95,7 @@ impl RedisSessionRepository for RedisSessionRepositoryImpl {
 
         match connection.del::<&str, ()>(session_id) {
             Ok(_) => Ok(()),
-            Err(e) => Err(Error::RedisError),
+            Err(e) => Err(Error::Redis),
         }
     }
 }

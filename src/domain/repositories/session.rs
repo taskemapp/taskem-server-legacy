@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use uuid::Uuid;
 
-use crate::domain::error::Result;
+use crate::common::Result;
 
 pub trait RedisSessionRepository: Send + Sync + Debug {
     fn create(&self, user_id: &Uuid) -> Result<String>;

@@ -7,8 +7,8 @@ use diesel::{
 use tracing::error;
 use uuid::Uuid;
 
-use crate::domain::error::Error;
-use crate::domain::error::Result;
+use crate::common::Error;
+use crate::common::Result;
 use crate::domain::models::task::task_assign::TaskAssign;
 use crate::domain::models::task::task_information::TaskInformation;
 use crate::domain::models::task::task_status::TaskStatus;
@@ -60,7 +60,7 @@ impl TaskRepository for TaskRepositoryImpl {
             }
             Err(e) => {
                 error!("{:?}", e);
-                Err(Error::RepositoryError)
+                Err(Error::Repository)
             }
         }
     }
@@ -100,7 +100,7 @@ impl TaskRepository for TaskRepositoryImpl {
             }
             Err(e) => {
                 error!("{:?}", e);
-                Err(Error::RepositoryError)
+                Err(Error::Repository)
             }
         }
     }
@@ -141,7 +141,7 @@ impl TaskRepository for TaskRepositoryImpl {
             }
             Err(e) => {
                 error!("{:?}", e);
-                Err(Error::RepositoryError)
+                Err(Error::Repository)
             }
         }
     }
@@ -163,7 +163,7 @@ impl TaskRepository for TaskRepositoryImpl {
             Ok(value) => value.iter().map(|e| e.task_id).collect(),
             Err(e) => {
                 error!("{:?}", e);
-                return Err(Error::RepositoryError);
+                return Err(Error::Repository);
             }
         };
 
@@ -196,7 +196,7 @@ impl TaskRepository for TaskRepositoryImpl {
             }
             Err(e) => {
                 error!("{:?}", e);
-                Err(Error::RepositoryError)
+                Err(Error::Repository)
             }
         }
     }
@@ -215,7 +215,7 @@ impl TaskRepository for TaskRepositoryImpl {
             Ok(created_task) => Ok(TaskInformation::from(created_task)),
             Err(e) => {
                 error!("{:?}", e);
-                Err(Error::RepositoryError)
+                Err(Error::Repository)
             }
         }
     }
@@ -244,13 +244,13 @@ impl TaskRepository for TaskRepositoryImpl {
                     Ok(_) => Ok(TaskAssign::from(assigned)),
                     Err(e) => {
                         error!("{:?}", e);
-                        Err(Error::RepositoryError)
+                        Err(Error::Repository)
                     }
                 }
             }
             Err(e) => {
                 error!("{:?}", e);
-                Err(Error::RepositoryError)
+                Err(Error::Repository)
             }
         }
     }
@@ -268,7 +268,7 @@ impl TaskRepository for TaskRepositoryImpl {
             .get_result::<TaskInformationDiesel>(&mut conn)
             .map_err(|e| {
                 error!("{:?}", e);
-                Error::RepositoryError
+                Error::Repository
             })?;
 
         Ok(TaskInformation::from(task))

@@ -1,6 +1,6 @@
 use uuid::Uuid;
 
-use crate::domain::error::Result;
+use crate::common::Result;
 use crate::domain::models::team::team_role::TeamRole;
 
 pub trait RoleRepository: Send + Sync {

@@ -1,4 +1,4 @@
-use crate::domain::error::Result;
+use crate::common::Result;
 use async_trait::async_trait;
 
 #[cfg_attr(test, mockall::automock)]

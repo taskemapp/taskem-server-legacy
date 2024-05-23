@@ -5,8 +5,8 @@ use diesel::{insert_into, update, ExpressionMethods, QueryDsl, RunQueryDsl, Sele
 use tracing::error;
 use uuid::Uuid;
 
-use crate::domain::error::Error;
-use crate::domain::error::Result;
+use crate::common::Error;
+use crate::common::Result;
 use crate::domain::models::team::team_role::TeamRole;
 use crate::domain::repositories::role::RoleRepository;
 use crate::infrastructure::databases::postgresql::DBConn;
@@ -47,7 +47,7 @@ impl RoleRepository for RoleRepositoryImpl {
                 let lowest = match roles.first() {
                     Some(value) => value,
                     None => {
-                        return Err(Error::RepositoryError);
+                        return Err(Error::Repository);
                     }
                 };
 
@@ -55,7 +55,7 @@ impl RoleRepository for RoleRepositoryImpl {
             }
             Err(e) => {
                 error!("{:?}", e);
-                Err(Error::RepositoryError)
+                Err(Error::Repository)
             }
         }
     }
@@ -86,7 +86,7 @@ impl RoleRepository for RoleRepositoryImpl {
                     Ok(value) => value,
                     Err(e) => {
                         error!("{:?}", e);
-                        return Err(Error::RepositoryError);
+                        return Err(Error::Repository);
                     }
                 };
 
@@ -94,7 +94,7 @@ impl RoleRepository for RoleRepositoryImpl {
             }
             Err(e) => {
                 error!("{:?}", e);
-                Err(Error::RepositoryError)
+                Err(Error::Repository)
             }
         }
     }
@@ -114,7 +114,7 @@ impl RoleRepository for RoleRepositoryImpl {
             Ok(value) => Ok(value.iter().map(TeamRole::from).collect()),
             Err(e) => {
                 error!("{:?}", e);
-                Err(Error::RepositoryError)
+                Err(Error::Repository)
             }
         }
     }
@@ -134,7 +134,7 @@ impl RoleRepository for RoleRepositoryImpl {
             Ok(created_role) => Ok(TeamRole::from(created_role)),
             Err(e) => {
                 error!("{:?}", e);
-                Err(Error::RepositoryError)
+                Err(Error::Repository)
             }
         }
     }
@@ -158,7 +158,7 @@ impl RoleRepository for RoleRepositoryImpl {
             Ok(value) => value,
             Err(e) => {
                 error!("{:?}", e);
-                return Err(Error::RepositoryError);
+                return Err(Error::Repository);
             }
         };
 
@@ -172,12 +172,12 @@ impl RoleRepository for RoleRepositoryImpl {
             Ok(value) => value,
             Err(e) => {
                 error!("{:?}", e);
-                return Err(Error::RepositoryError);
+                return Err(Error::Repository);
             }
         };
 
         if role.team_id != update_member.team_id {
-            return Err(Error::RepositoryError);
+            return Err(Error::Repository);
         }
 
         update_member.role_id = role.id;
@@ -194,7 +194,7 @@ impl RoleRepository for RoleRepositoryImpl {
             Ok(value) => value,
             Err(e) => {
                 error!("{:?}", e);
-                return Err(Error::RepositoryError);
+                return Err(Error::Repository);
             }
         };
 
@@ -208,7 +208,7 @@ impl RoleRepository for RoleRepositoryImpl {
             Ok(value) => value,
             Err(e) => {
                 error!("{:?}", e);
-                return Err(Error::RepositoryError);
+                return Err(Error::Repository);
             }
         };
 

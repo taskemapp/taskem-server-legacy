@@ -1,6 +1,6 @@
 use uuid::Uuid;
 
-use crate::domain::error::Result;
+use crate::common::Result;
 use crate::domain::models::task::task_assign::TaskAssign;
 use crate::domain::models::task::task_information::TaskInformation;
 

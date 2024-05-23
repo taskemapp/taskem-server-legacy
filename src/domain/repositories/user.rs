@@ -1,4 +1,4 @@
-use crate::domain::error::Result;
+use crate::common::Result;
 use crate::domain::models::user::login_information::LoginInformation;
 use crate::domain::models::user::user_information::UserInformation;
 use uuid::Uuid;

@@ -1,5 +1,5 @@
-use crate::domain::error::Error;
-use crate::domain::error::Result;
+use crate::common::Error;
+use crate::common::Result;
 use crate::domain::models::user::login_information::LoginInformation;
 use crate::domain::models::user::user_information::UserInformation;
 use crate::domain::repositories::user::UserRepository;
@@ -38,7 +38,7 @@ impl UserRepository for UserRepositoryImpl<'_> {
             Ok(pass) => pass.to_string(),
             Err(e) => {
                 error!("{:?}", e);
-                return Err(Error::RepositoryError);
+                return Err(Error::Repository);
             }
         };
 
@@ -51,7 +51,7 @@ impl UserRepository for UserRepositoryImpl<'_> {
             .get_result::<UserInformationDiesel>(&mut conn)
             .map_err(|e| {
                 error!("{:?}", e);
-                Error::RepositoryError
+                Error::Repository
             })?;
 
         Ok(UserInformation::from(created_user))
@@ -72,7 +72,7 @@ impl UserRepository for UserRepositoryImpl<'_> {
             .get_result::<UserInformationDiesel>(&mut conn)
             .map_err(|e| {
                 error!("{:?}", e);
-                Error::RepositoryError
+                Error::Repository
             })?;
 
         Ok(UserInformation::from(updated_user))
@@ -89,7 +89,7 @@ impl UserRepository for UserRepositoryImpl<'_> {
             .first(&mut conn)
             .map_err(|e| {
                 error!("{:?}", e);
-                Error::RepositoryError
+                Error::Repository
             })?;
 
         Ok(UserInformation::from(user))
@@ -106,7 +106,7 @@ impl UserRepository for UserRepositoryImpl<'_> {
             .first(&mut conn)
             .map_err(|e| {
                 error!("{:?}", e);
-                Error::RepositoryError
+                Error::Repository
             })?;
 
         Ok(UserInformation::from(user))
@@ -128,7 +128,7 @@ impl UserRepository for UserRepositoryImpl<'_> {
                     Ok(pass) => pass,
                     Err(e) => {
                         error!("{:?}", e);
-                        return Err(Error::RepositoryError);
+                        return Err(Error::Repository);
                     }
                 };
 
@@ -137,12 +137,12 @@ impl UserRepository for UserRepositoryImpl<'_> {
                     .verify_password(login_information.password.as_bytes(), &parsed_hash)
                 {
                     Ok(_) => Ok(UserInformation::from(user_inf)),
-                    Err(_) => Err(Error::RepositoryError),
+                    Err(_) => Err(Error::Repository),
                 }
             }
             Err(e) => {
                 error!("{:?}", e);
-                Err(Error::RepositoryError)
+                Err(Error::Repository)
             }
         }
     }

@@ -7,8 +7,8 @@ use diesel::{
 use tracing::{debug, error};
 use uuid::Uuid;
 
-use crate::domain::error::Error;
-use crate::domain::error::Result;
+use crate::common::Error;
+use crate::common::Result;
 use crate::domain::models::team::team_information::TeamInformation;
 use crate::domain::models::team::team_leave::TeamLeave;
 use crate::domain::models::team::team_member::TeamMember;
@@ -54,7 +54,7 @@ impl TeamRepository for TeamRepositoryImpl {
                     Ok(value) => value.iter().map(UserInformation::from).collect(),
                     Err(e) => {
                         error!("{:?}", e);
-                        return Err(Error::RepositoryError);
+                        return Err(Error::Repository);
                     }
                 };
 
@@ -65,7 +65,7 @@ impl TeamRepository for TeamRepositoryImpl {
             }
             Err(e) => {
                 error!("{:?}", e);
-                Err(Error::RepositoryError)
+                Err(Error::Repository)
             }
         }
     }
@@ -85,7 +85,7 @@ impl TeamRepository for TeamRepositoryImpl {
             .load(&mut conn)
             .map_err(|e| {
                 error!("{:?}", e);
-                Error::RepositoryError
+                Error::Repository
             })?
             .iter()
             .map(|team| team.team_id)
@@ -101,7 +101,7 @@ impl TeamRepository for TeamRepositoryImpl {
             .load(&mut conn)
             .map_err(|e| {
                 error!("{:?}", e);
-                Error::RepositoryError
+                Error::Repository
             })?;
 
         let teams: Vec<TeamInformation> = teams_diesel
@@ -145,7 +145,7 @@ impl TeamRepository for TeamRepositoryImpl {
             Ok(value) => value.iter().map(|team| team.team_id).collect(),
             Err(e) => {
                 error!("{:?}", e);
-                return Err(Error::RepositoryError);
+                return Err(Error::Repository);
             }
         };
 
@@ -183,7 +183,7 @@ impl TeamRepository for TeamRepositoryImpl {
             }
             Err(e) => {
                 error!("{:?}", e);
-                Err(Error::RepositoryError)
+                Err(Error::Repository)
             }
         }
     }
@@ -202,7 +202,7 @@ impl TeamRepository for TeamRepositoryImpl {
             Ok(created_team) => Ok(TeamInformation::from(created_team)),
             Err(e) => {
                 error!("{:?}", e);
-                Err(Error::RepositoryError)
+                Err(Error::Repository)
             }
         }
     }
@@ -221,7 +221,7 @@ impl TeamRepository for TeamRepositoryImpl {
             Ok(joined_member) => Ok(TeamMember::from(joined_member)),
             Err(e) => {
                 error!("{:?}", e);
-                Err(Error::RepositoryError)
+                Err(Error::Repository)
             }
         }
     }
@@ -240,7 +240,7 @@ impl TeamRepository for TeamRepositoryImpl {
             Ok(_) => Ok(()),
             Err(e) => {
                 error!("{:?}", e);
-                Err(Error::RepositoryError)
+                Err(Error::Repository)
             }
         }
     }
