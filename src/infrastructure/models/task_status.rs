@@ -3,6 +3,7 @@ use crate::infrastructure::schema::sql_types::TaskStatus as TaskStatusScheme;
 use diesel::deserialize::FromSql;
 use diesel::pg::{Pg, PgValue};
 use diesel::serialize::{IsNull, Output, ToSql};
+use diesel::sql_types::Text;
 use diesel::{AsExpression, FromSqlRow};
 use std::error::Error;
 use std::fmt::{Debug, Display, Formatter};
@@ -68,8 +69,8 @@ impl ToSql<TaskStatusScheme, Pg> for TaskStatusDiesel {
 }
 
 impl FromSql<TaskStatusScheme, Pg> for TaskStatusDiesel {
-    fn from_sql(bytes: PgValue<'_>) -> diesel::deserialize::Result<Self> {
-        let binding = String::from_sql(bytes)?;
+    fn from_sql(bytes: PgValue) -> diesel::deserialize::Result<Self> {
+        let binding = <String as FromSql<Text, Pg>>::from_sql(bytes)?;
         let status = binding.as_str();
         match status {
             "in progress" => Ok(TaskStatusDiesel::InProgress),
