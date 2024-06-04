@@ -68,8 +68,8 @@ impl ToSql<TaskStatusScheme, Pg> for TaskStatusDiesel {
 }
 
 impl FromSql<TaskStatusScheme, Pg> for TaskStatusDiesel {
-    fn from_sql(bytes: PgValue<'_>) -> diesel::deserialize::Result<Self> {
-        let binding = String::from_sql(bytes)?;
+    fn from_sql(bytes: PgValue) -> diesel::deserialize::Result<Self> {
+        let binding: String = String::from_sql(bytes)?;
         let status = binding.as_str();
         match status {
             "in progress" => Ok(TaskStatusDiesel::InProgress),
