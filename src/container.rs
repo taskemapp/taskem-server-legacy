@@ -6,6 +6,7 @@ use crate::api::services::task::TaskServiceImpl;
 use crate::api::services::team::TeamServiceImpl;
 use crate::auth::auth_server::AuthServer;
 use crate::core::regex::CachedRegexValidator;
+use crate::domain::constants::POSTGRESQL_DB_URI;
 use crate::infrastructure::databases::postgresql::db_pool;
 use crate::infrastructure::databases::redis::redis_pool;
 use crate::infrastructure::repositories::file_repository::FileRepositoryImpl;
@@ -19,16 +20,15 @@ use crate::task::task_server::TaskServer;
 use crate::team::team_server::TeamServer;
 use argon2::Argon2;
 use autometrics::autometrics;
-use aws_config::meta::region::RegionProviderChain;
-use aws_config::Region;
-use aws_sdk_s3::config::Credentials;
 use aws_sdk_s3::Client;
 use diesel_migrations::{FileBasedMigrations, MigrationHarness};
+use std::env;
 use std::sync::Arc;
 use std::time::Duration;
 use tower::layer::util::{Identity, Stack};
 use tower::timeout::TimeoutLayer;
 
+#[derive(Clone)]
 pub struct Container {
     pub auth_server: AuthServer<AuthServiceImpl>,
     pub team_server: TeamServer<TeamServiceImpl>,
@@ -48,6 +48,9 @@ impl Container {
             to_compile
         });
 
+        let database_url = env::var(POSTGRESQL_DB_URI)
+            .unwrap_or_else(|_| panic!("{value} must be set", value = POSTGRESQL_DB_URI));
+
         let pool = Arc::new(db_pool());
 
         let migrations_dir = "migrations";
@@ -66,19 +69,23 @@ impl Container {
         let aws_config = aws_config::load_from_env().await;
         let s3_client = Arc::new(Client::new(&aws_config));
 
-        s3_client
-            .create_bucket()
-            .bucket("users")
-            .send()
-            .await
-            .unwrap();
+        let buckets = s3_client.list_buckets().send().await.unwrap();
 
-        s3_client
-            .create_bucket()
-            .bucket("teams")
-            .send()
-            .await
-            .unwrap();
+        if buckets.buckets().is_empty() {
+            s3_client
+                .create_bucket()
+                .bucket("users")
+                .send()
+                .await
+                .unwrap();
+
+            s3_client
+                .create_bucket()
+                .bucket("teams")
+                .send()
+                .await
+                .unwrap();
+        }
 
         let user_repository = Arc::new(UserRepositoryImpl::new(pool.clone(), argon2.clone()));
         let team_repository = Arc::new(TeamRepositoryImpl::new(pool.clone()));

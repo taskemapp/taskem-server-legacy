@@ -1,0 +1,5 @@
+---
+source: tests/auth_tests.rs
+expression: "format!(\"User logged with name {}\", inner.user_name)"
+---
+User logged with name test-login

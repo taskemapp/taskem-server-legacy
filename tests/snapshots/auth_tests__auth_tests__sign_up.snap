@@ -1,0 +1,7 @@
+---
+source: tests/auth_tests.rs
+expression: inner
+---
+SignUpResponse {
+    message: "User successfully created",
+}
